@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ChevronRight, HomeIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function PagesTab() {
   const { currentFileId, projectStructure, getFileById } = useProject();
@@ -87,7 +88,9 @@ export function PagesTab() {
       </div>
 
       <div
-        className="p-4 rounded-lg min-h-[250px]"
+        className={cn("p-4 rounded-lg min-h-[250px] border", {
+          "bg-secondary": true,
+        })}
         style={
           layoutFile?.customStyles
             ? {
