@@ -23,10 +23,10 @@ export function BrowserView() {
           <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="api">API</TabsTrigger>
         </TabsList>
-        <TabsContent value="pages" className="flex-1 p-4">
+        <TabsContent value="pages" className="flex-1 py-4">
           <PagesTab />
         </TabsContent>
-        <TabsContent value="api" className="flex-1 p-4">
+        <TabsContent value="api" className="flex-1 py-4">
           <ApiTab />
         </TabsContent>
       </Tabs>

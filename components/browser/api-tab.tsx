@@ -8,7 +8,7 @@ export function ApiTab() {
 
   if (!currentFile?.endpoint?.startsWith("/api")) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
+      <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground">
         This is a page route. Please use the Pages tab.
       </div>
     );
