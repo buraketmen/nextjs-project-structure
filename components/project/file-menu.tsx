@@ -22,9 +22,15 @@ interface FileMenuProps {
   file: ProjectFile;
   onRename: () => void;
   onEditStyles: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
+export function FileMenu({
+  file,
+  onRename,
+  onEditStyles,
+  onOpenChange,
+}: FileMenuProps) {
   const {
     addFile,
     updateFile,
@@ -35,8 +41,13 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isDirectory = file.type === FileTypes.directory;
 
+  const handleOpenChange = (open: boolean) => {
+    setIsDropdownOpen(open);
+    onOpenChange?.(open);
+  };
+
   const handleAddFile = (type: FileType) => {
-    setIsDropdownOpen(false);
+    handleOpenChange(false);
     setTimeout(() => {
       addFile(file.id, type);
       updateFile(file.id, { isExpanded: true });
@@ -60,9 +71,13 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
   const canShowRename = file.isRenameable !== false && !file.isDynamic;
 
   return (
-    <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+    <DropdownMenu open={isDropdownOpen} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=open]:bg-accent"
+        >
           <MoreVertical size={16} />
         </Button>
       </DropdownMenuTrigger>
@@ -108,7 +123,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
           <DynamicRouteMenu
             file={file}
             onUpdateFile={(updates) => {
-              setIsDropdownOpen(false);
+              handleOpenChange(false);
               setTimeout(() => {
                 updateFile(file.id, updates);
               }, 0);
@@ -120,7 +135,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              setIsDropdownOpen(false);
+              handleOpenChange(false);
               setTimeout(() => {
                 onEditStyles();
               }, 0);
@@ -133,7 +148,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              setIsDropdownOpen(false);
+              handleOpenChange(false);
               setTimeout(() => {
                 onRename();
               }, 0);
@@ -146,7 +161,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              setIsDropdownOpen(false);
+              handleOpenChange(false);
               setTimeout(() => {
                 deleteFile(file.id);
               }, 0);

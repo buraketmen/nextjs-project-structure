@@ -6,6 +6,7 @@ import {
 } from "@/lib/types";
 import {
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,

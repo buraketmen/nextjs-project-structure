@@ -22,6 +22,7 @@ export function FileNode({ file, level }: FileNodeProps) {
   const [isOpen, setIsOpen] = useState(file.isExpanded || false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleClick = () => {
     if (isDirectory) {
@@ -41,18 +42,23 @@ export function FileNode({ file, level }: FileNodeProps) {
   };
 
   return (
-    <div className={`py-0.5`} style={{ marginLeft: `${level * 8}px` }}>
+    <div
+      className={`py-0.5`}
+      style={{
+        marginLeft: `${Math.min(level, 6) * 6}px`,
+      }}
+    >
       <motion.div
         className={cn(
-          "flex items-center gap-2 p-1 h-[32px] rounded hover:bg-accent cursor-pointer group",
-          currentFile?.id === file.id && "bg-accent"
+          "flex items-center gap-2 p-1 h-[32px] rounded hover:bg-accent cursor-pointer group truncate",
+          (currentFile?.id === file.id || isMenuOpen) && "bg-accent"
         )}
         onClick={handleClick}
         whileHover={{ scale: 1.01 }}
       >
         {isDirectory && (
           <motion.div
-            className="cursor-pointer"
+            className="cursor-pointer flex-shrink-0"
             initial={false}
             animate={{ rotate: isOpen ? 90 : 0 }}
             transition={{ duration: 0.2 }}
@@ -60,8 +66,11 @@ export function FileNode({ file, level }: FileNodeProps) {
             <ChevronRight size={16} />
           </motion.div>
         )}
-        <Icon size={16} className={cn(file.isDynamic && "text-blue-500")} />
-        <span>{file.name}</span>
+        <Icon
+          size={16}
+          className={cn("flex-shrink-0", file.isDynamic && "text-blue-500")}
+        />
+        <span className="truncate">{file.name}</span>
 
         {file.isEditable && (
           <div
@@ -72,6 +81,7 @@ export function FileNode({ file, level }: FileNodeProps) {
               file={file}
               onRename={() => setIsRenameDialogOpen(true)}
               onEditStyles={() => setIsStyleDialogOpen(true)}
+              onOpenChange={setIsMenuOpen}
             />
           </div>
         )}
