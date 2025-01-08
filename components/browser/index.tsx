@@ -6,7 +6,7 @@ import { PagesTab } from "./pages-tab";
 import { ApiTab } from "./api-tab";
 
 export function BrowserView() {
-  const { currentFile, isApiDirectory } = useProject();
+  const { currentFile, hasApiParent } = useProject();
 
   return (
     <div className="flex flex-col h-full">
@@ -17,7 +17,7 @@ export function BrowserView() {
         </div>
       </div>
       <Tabs
-        defaultValue={isApiDirectory(currentFile) ? "api" : "pages"}
+        defaultValue={hasApiParent(currentFile, false) ? "api" : "pages"}
         className="flex-1"
       >
         <TabsList>

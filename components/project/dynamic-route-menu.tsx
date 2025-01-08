@@ -4,8 +4,13 @@ import {
   ProjectFile,
   FileTypes,
 } from "@/lib/types";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Menu } from "lucide-react";
+import {
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, SquareEqual } from "lucide-react";
 import { useProject } from "@/context/project-context";
 
 interface DynamicRouteMenuProps {
@@ -19,115 +24,98 @@ export function DynamicRouteMenu({
   onUpdateFile,
   setIsDropdownOpen,
 }: DynamicRouteMenuProps) {
-  const { projectStructure, findParentFile } = useProject();
+  const { hasApiParent } = useProject();
   const isApiRoot = file.name === AssignedFileNames.api;
+  const isApiDirectory = hasApiParent(file, false);
 
-  // Check if this file is under the API directory
-  const hasApiParent = (currentFile: ProjectFile): boolean => {
-    const parent = findParentFile(projectStructure, currentFile);
-    if (!parent) return false;
-    if (parent.name === AssignedFileNames.api) return true;
-    return hasApiParent(parent);
+  const handleUpdate = (updates: Partial<ProjectFile>) => {
+    setIsDropdownOpen(false);
+    setTimeout(() => {
+      onUpdateFile(updates);
+    }, 150);
   };
 
-  const isApiDirectory = hasApiParent(file);
-
-  // Don't show dynamic options for API root or non-directories
   if (file.type !== FileTypes.directory || isApiRoot) return null;
 
-  // For API directories, only allow normal dynamic routes
-  const handleMakeDynamic = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (file.isDynamic) {
-      onUpdateFile({
-        isDynamic: false,
-        dynamicRouteType: null,
-        name: "new-folder",
-      });
-      setIsDropdownOpen(false);
-    } else {
-      onUpdateFile({
-        isDynamic: true,
-        dynamicRouteType: DynamicRouteTypes.normal,
-        name: isApiDirectory ? "[id]" : "[slug]",
-      });
-    }
-  };
+  if (file.isDynamic) {
+    return (
+      <DropdownMenuItem
+        onClick={(e) => {
+          e.stopPropagation();
+          handleUpdate({
+            isDynamic: false,
+            dynamicRouteType: null,
+            name: "new-folder",
+          });
+        }}
+      >
+        <SquareEqual size={16} />
+        Make Static
+      </DropdownMenuItem>
+    );
+  }
 
   return (
-    <>
-      <DropdownMenuItem onClick={handleMakeDynamic}>
-        <Menu size={16} className="mr-2" />
-        {file.isDynamic ? "Make Static" : "Make Dynamic"}
-      </DropdownMenuItem>
-      {file.isDynamic && !isApiDirectory && (
-        <>
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <Menu size={16} />
+        Make Dynamic
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="ml-3">
+        {!isApiDirectory ? (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpdate({
+                  isDynamic: true,
+                  dynamicRouteType: DynamicRouteTypes.normal,
+                  name: "[slug]",
+                });
+              }}
+            >
+              Normal [slug]
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpdate({
+                  isDynamic: true,
+                  dynamicRouteType: DynamicRouteTypes.catchAll,
+                  name: "[...slug]",
+                });
+              }}
+            >
+              Catch-all [...slug]
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpdate({
+                  isDynamic: true,
+                  dynamicRouteType: DynamicRouteTypes.optionalCatchAll,
+                  name: "[[...slug]]",
+                });
+              }}
+            >
+              Optional Catch-all [[...slug]]
+            </DropdownMenuItem>
+          </>
+        ) : (
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              onUpdateFile({
+              handleUpdate({
+                isDynamic: true,
                 dynamicRouteType: DynamicRouteTypes.normal,
-                name: "[slug]",
+                name: "[id]",
               });
             }}
           >
-            <span className="ml-6">Normal Route [slug]</span>
+            Dynamic Route [id]
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdateFile({
-                dynamicRouteType: DynamicRouteTypes.catchAll,
-                name: "[...slug]",
-              });
-              if (
-                file.children?.some(
-                  (child) => child.type === FileTypes.directory
-                )
-              ) {
-                console.log(
-                  "Converting to catch-all route. All subdirectories will be removed."
-                );
-              }
-            }}
-          >
-            <span className="ml-6">Catch-all Route [...slug]</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdateFile({
-                dynamicRouteType: "optional-catch-all",
-                name: "[[...slug]]",
-              });
-              if (
-                file.children?.some(
-                  (child) => child.type === FileTypes.directory
-                )
-              ) {
-                console.log(
-                  "Converting to optional catch-all route. All subdirectories will be removed."
-                );
-              }
-            }}
-          >
-            <span className="ml-6">Optional Catch-all [[...slug]]</span>
-          </DropdownMenuItem>
-        </>
-      )}
-      {file.isDynamic && isApiDirectory && (
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            onUpdateFile({
-              dynamicRouteType: DynamicRouteTypes.normal,
-              name: "[id]",
-            });
-          }}
-        >
-          <span className="ml-6">Dynamic Route [id]</span>
-        </DropdownMenuItem>
-      )}
-    </>
+        )}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }

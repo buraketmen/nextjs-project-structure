@@ -3,9 +3,9 @@
 import { useProject } from "@/context/project-context";
 
 export function ApiTab() {
-  const { currentFile, isApiDirectory } = useProject();
+  const { currentFile, hasApiParent } = useProject();
 
-  if (!isApiDirectory(currentFile)) {
+  if (!hasApiParent(currentFile, false)) {
     return (
       <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground">
         This is a page route. Please use the Pages tab.

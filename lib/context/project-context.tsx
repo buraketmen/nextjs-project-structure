@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import {
   ProjectFile,
   FileType,
@@ -10,19 +16,14 @@ import {
 } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { initialStructure } from "@/context/project-data";
-
-const DYNAMIC_ROUTE_PATTERNS = {
-  optionalCatchAll: /\[\[\.\.\.(\w+)\]\]/g,
-  catchAll: /\[\.\.\.(\w+)\]/g,
-  dynamic: /\[(\w+)\]/g,
-};
-
-const replaceDynamicRoutePatterns = (path: string): string => {
-  return path
-    .replace(DYNAMIC_ROUTE_PATTERNS.optionalCatchAll, ":$1?*")
-    .replace(DYNAMIC_ROUTE_PATTERNS.catchAll, ":$1*")
-    .replace(DYNAMIC_ROUTE_PATTERNS.dynamic, ":$1");
-};
+import {
+  deleteFromStructure,
+  findFileById,
+  findParentFile,
+  getFullPath,
+  replaceDynamicRoutePatterns,
+  updateStructure,
+} from "@/lib/utils";
 
 const fileConfigs: Record<
   FileType,
@@ -85,17 +86,14 @@ interface ProjectContextType {
   projectStructure: ProjectFile[];
   currentFile: ProjectFile | null;
   setCurrentFile: (file: ProjectFile | null) => void;
-  updateProjectStructure: (newStructure: ProjectFile[]) => void;
   addFile: (parentId: string, type: FileType) => void;
   updateFile: (fileId: string, updates: Partial<ProjectFile>) => void;
   deleteFile: (fileId: string) => void;
-  getFileById: (id: string) => ProjectFile | undefined;
   getFileByPath: (path: string) => ProjectFile | undefined;
-  findParentFile: (
-    files: ProjectFile[],
-    target: ProjectFile
-  ) => ProjectFile | null;
-  isApiDirectory: (file: ProjectFile | null | undefined) => boolean;
+  hasApiParent: (file: ProjectFile | null, checkItself: boolean) => boolean;
+  getLayoutFile: (file: ProjectFile | null) => ProjectFile | null;
+  checkApiRestrictions: (file: ProjectFile | null, type: FileType) => boolean;
+  checkPageRestrictions: (file: ProjectFile | null, type: FileType) => boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -105,32 +103,176 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     useState<ProjectFile[]>(initialStructure);
   const [currentFile, setCurrentFile] = useState<ProjectFile | null>(null);
 
-  const findFileById = (
-    files: ProjectFile[],
-    id: string
-  ): ProjectFile | undefined => {
-    for (const file of files) {
-      if (file.id === id) return file;
-      if (file.children) {
-        const found = findFileById(file.children, id);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  };
+  useEffect(() => {
+    const file = findFileById(projectStructure, currentFile?.id);
+    setCurrentFile(file || null);
+  }, [projectStructure, currentFile]);
 
-  const findFileByPath = (
-    files: ProjectFile[],
-    path: string
-  ): ProjectFile | undefined => {
+  const getFileByPath = (path: string) => {
     const parts = path.split("/").filter(Boolean);
-    let current = files.find((f) => f.name === parts[0]);
+    let current = projectStructure.find((f) => f.name === parts[0]);
 
     for (let i = 1; i < parts.length && current; i++) {
       current = current.children?.find((f) => f.name === parts[i]);
     }
-
     return current;
+  };
+
+  const getLayoutFile = (file: ProjectFile | null) => {
+    if (!file) return null;
+    const parent = findParentFile(projectStructure, file);
+    if (!parent?.children) return null;
+    return (
+      parent.children.find((child) => child.type === FileTypes.layout) || null
+    );
+  };
+
+  const hasApiParent = (
+    file: ProjectFile | null,
+    checkItself: boolean = false
+  ): boolean => {
+    if (!file) return false;
+    if (checkItself && file.name === AssignedFileNames.api) return true; //TODO: check if this is correct
+    const parent = findParentFile(projectStructure, file);
+    if (!parent) return false;
+    if (parent.name === AssignedFileNames.api) return true;
+    return hasApiParent(parent, false);
+  };
+
+  const addFile = (parentId: string, type: FileType) => {
+    const newStructure = [...projectStructure];
+    const parent = findFileById(newStructure, parentId);
+
+    if (parent && parent.type === FileTypes.directory) {
+      const parentPath = getFullPath(parent, newStructure);
+
+      const hasParentCatchAll = (currentFile: ProjectFile): boolean => {
+        if (
+          currentFile.dynamicRouteType === DynamicRouteTypes.catchAll ||
+          currentFile.dynamicRouteType === DynamicRouteTypes.optionalCatchAll
+        ) {
+          return true;
+        }
+        const parentFile = findParentFile(newStructure, currentFile);
+        if (!parentFile) return false;
+        return hasParentCatchAll(parentFile);
+      };
+
+      if (
+        hasParentCatchAll(parent) &&
+        type !== FileTypes.layout &&
+        type !== FileTypes.page &&
+        type !== FileTypes.route
+      ) {
+        // Dont allow adding any files under catch-all routes except for layout, page, and route
+        return;
+      }
+
+      if (type === FileTypes.route && !parentPath.includes("/api")) {
+        // Dont allow adding API routes outside of /api directory
+        return;
+      }
+
+      const newFile: ProjectFile = {
+        id: uuidv4(),
+        ...fileConfigs[type],
+      };
+
+      const children = parent.children || [];
+      if (
+        (type === FileTypes.page || type === FileTypes.layout) &&
+        children.some((child) => child.type === type)
+      )
+        return;
+
+      if (type === FileTypes.directory) {
+        const baseName = "new-folder";
+        let counter = 1;
+        newFile.name = baseName;
+
+        while (children.some((child) => child.name === newFile.name)) {
+          newFile.name = `${baseName}-${counter}`;
+          counter++;
+        }
+      }
+
+      newFile.endpoint = buildEndpoint(newFile, parentPath);
+
+      if (type !== FileTypes.route || newFile.endpoint !== null) {
+        parent.children = [...children, newFile];
+        setProjectStructure(newStructure);
+      }
+    }
+  };
+
+  const updateFile = (fileId: string, updates: Partial<ProjectFile>) => {
+    // If making a directory catch-all or optional catch-all, remove subdirectories
+    if (
+      updates.dynamicRouteType &&
+      (updates.dynamicRouteType === DynamicRouteTypes.catchAll ||
+        updates.dynamicRouteType === DynamicRouteTypes.optionalCatchAll)
+    ) {
+      const initialStructure = [...projectStructure];
+      const file = findFileById(initialStructure, fileId);
+      if (file && file.children) {
+        file.children = file.children.filter(
+          (child) => child.type !== FileTypes.directory
+        );
+      }
+    }
+
+    // If name is being updated or dynamic route type changes, we need to recalculate endpoints
+    if (updates.name || updates.dynamicRouteType || updates.isDynamic) {
+      const initialStructure = [...projectStructure];
+      const file = findFileById(initialStructure, fileId);
+      if (file) {
+        // Update the file first
+        const updatedStructure = updateStructure(
+          initialStructure,
+          fileId,
+          updates
+        );
+
+        // Helper function to update endpoints recursively
+        const updateEndpoints = (
+          files: ProjectFile[],
+          rootFiles: ProjectFile[]
+        ): ProjectFile[] => {
+          return files.map((file) => {
+            const fullPath = getFullPath(file, rootFiles);
+            const newEndpoint = buildEndpoint(file, fullPath);
+
+            if (file.children) {
+              return {
+                ...file,
+                endpoint: newEndpoint,
+                children: updateEndpoints(file.children, rootFiles),
+              };
+            }
+
+            return {
+              ...file,
+              endpoint: newEndpoint,
+            };
+          });
+        };
+
+        const finalStructure = updateEndpoints(
+          updatedStructure,
+          updatedStructure
+        );
+        setProjectStructure(finalStructure);
+        return;
+      }
+    }
+
+    // For other updates that don't affect endpoints
+    setProjectStructure(updateStructure(projectStructure, fileId, updates));
+  };
+
+  const deleteFile = (fileId: string) => {
+    const newStructure = deleteFromStructure(projectStructure, fileId);
+    setProjectStructure(newStructure);
   };
 
   const buildEndpoint = (
@@ -186,240 +328,48 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  const updateStructure = (
-    files: ProjectFile[],
-    id: string,
-    updates: Partial<ProjectFile>
-  ): ProjectFile[] => {
-    return files.map((file) => {
-      if (file.id === id) {
-        return { ...file, ...updates };
-      }
-      if (file.children) {
-        return {
-          ...file,
-          children: updateStructure(file.children, id, updates),
-        };
-      }
-      return file;
-    });
-  };
+  const checkApiRestrictions = (
+    file: ProjectFile | null,
+    type: FileType
+  ): boolean => {
+    if (!file) return true;
+    const isUnderApi = hasApiParent(file, true);
 
-  // Helper function to delete file from structure
-  const deleteFromStructure = (
-    files: ProjectFile[],
-    id: string
-  ): ProjectFile[] => {
-    return files.filter((file) => {
-      if (file.id === id) return false;
-      if (file.children) {
-        file.children = deleteFromStructure(file.children, id);
+    if (isUnderApi) {
+      if (type === FileTypes.page || type === FileTypes.layout) {
+        return false;
       }
-      return true;
-    });
-  };
 
-  // Helper to find parent file
-  const findParentFile = (
-    files: ProjectFile[],
-    target: ProjectFile
-  ): ProjectFile | null => {
-    for (const file of files) {
-      if (file.children?.some((child) => child.id === target.id)) return file;
-      if (file.children) {
-        const found = findParentFile(file.children, target);
-        if (found) return found;
+      if (type === FileTypes.route) {
+        return !file.children?.some((child) => child.type === FileTypes.route);
       }
     }
-    return null;
+
+    if (type === FileTypes.route && !isUnderApi) {
+      return false;
+    }
+
+    return true;
   };
 
-  const updateProjectStructure = (newStructure: ProjectFile[]) => {
-    setProjectStructure(newStructure);
-  };
-
-  const addFile = (parentId: string, type: FileType) => {
-    const newStructure = [...projectStructure];
-    const parent = findFileById(newStructure, parentId);
-
-    if (parent && parent.type === FileTypes.directory) {
-      // Calculate parent path first to check if we can add the file
-      const getFullPath = (file: ProjectFile): string => {
-        const parts: string[] = [file.name];
-        let current = findParentFile(newStructure, file);
-        while (current) {
-          parts.unshift(current.name);
-          current = findParentFile(newStructure, current);
-        }
-        return `/${parts.join("/")}`;
-      };
-
-      const parentPath = getFullPath(parent);
-
-      // Check if parent or any ancestor is a catch-all route
-      const hasParentCatchAll = (currentFile: ProjectFile): boolean => {
-        if (
-          currentFile.dynamicRouteType === DynamicRouteTypes.catchAll ||
-          currentFile.dynamicRouteType === DynamicRouteTypes.optionalCatchAll
-        ) {
-          return true;
-        }
-        const parentFile = findParentFile(newStructure, currentFile);
-        if (!parentFile) return false;
-        return hasParentCatchAll(parentFile);
-      };
-
-      // Don't allow adding any files under catch-all routes except for layout, page, and route
-      if (
-        hasParentCatchAll(parent) &&
-        type !== FileTypes.layout &&
-        type !== FileTypes.page &&
-        type !== FileTypes.route
-      ) {
-        return;
-      }
-
-      // Check if we can add an API route here
-      if (type === FileTypes.route && !parentPath.includes("/api")) {
-        return; // Can't add API route outside of /api directory
-      }
-
-      const newFile: ProjectFile = {
-        id: uuidv4(),
-        ...fileConfigs[type],
-      };
-
-      // Check if we can add this file
-      const children = parent.children || [];
-      if (
-        type === FileTypes.page &&
-        children.some((child) => child.type === FileTypes.page)
-      )
-        return;
-      if (
-        type === FileTypes.layout &&
-        children.some((child) => child.type === FileTypes.layout)
-      )
-        return;
-
-      // Generate unique name for directories
+  const checkPageRestrictions = (
+    file: ProjectFile | null,
+    type: FileType
+  ): boolean => {
+    if (!file) return true;
+    if (type === FileTypes.page || type === FileTypes.layout) {
+      return !file.children?.some((child) => child.type === type);
+    }
+    const isCatchAllRoute =
+      file.dynamicRouteType === DynamicRouteTypes.catchAll ||
+      file.dynamicRouteType === DynamicRouteTypes.optionalCatchAll;
+    if (isCatchAllRoute) {
       if (type === FileTypes.directory) {
-        const baseName = "new-folder";
-        let counter = 1;
-        newFile.name = baseName;
-
-        while (children.some((child) => child.name === newFile.name)) {
-          newFile.name = `${baseName}-${counter}`;
-          counter++;
-        }
-      }
-
-      // Set endpoint based on file type and path
-      newFile.endpoint = buildEndpoint(newFile, parentPath);
-
-      // Only add the file if it has a valid endpoint (or is not a route)
-      if (type !== FileTypes.route || newFile.endpoint !== null) {
-        parent.children = [...children, newFile];
-        setProjectStructure(newStructure);
-      }
-    }
-  };
-
-  const updateFile = (fileId: string, updates: Partial<ProjectFile>) => {
-    if (
-      updates.dynamicRouteType &&
-      (updates.dynamicRouteType === DynamicRouteTypes.catchAll ||
-        updates.dynamicRouteType === DynamicRouteTypes.optionalCatchAll)
-    ) {
-      const initialStructure = [...projectStructure];
-      const file = findFileById(initialStructure, fileId);
-      if (file && file.children) {
-        // Remove all subdirectories but keep files
-        file.children = file.children.filter(
-          (child) => child.type !== FileTypes.directory
-        );
+        return false;
       }
     }
 
-    // If name is being updated, we need to recalculate endpoints
-    if (updates.name) {
-      const initialStructure = [...projectStructure];
-      const file = findFileById(initialStructure, fileId);
-      if (file) {
-        // Update the file first
-        const updatedStructure = updateStructure(
-          initialStructure,
-          fileId,
-          updates
-        );
-
-        // Helper function to update endpoints recursively
-        const updateEndpoints = (
-          files: ProjectFile[],
-          rootFiles: ProjectFile[]
-        ): ProjectFile[] => {
-          return files.map((file) => {
-            // Calculate full path for endpoint
-            const getFullPath = (f: ProjectFile): string => {
-              const parts: string[] = [f.name];
-              let current = findParentFile(rootFiles, f);
-              while (current) {
-                parts.unshift(current.name);
-                current = findParentFile(rootFiles, current);
-              }
-              return `/${parts.join("/")}`;
-            };
-
-            const fullPath = getFullPath(file);
-            const newEndpoint = buildEndpoint(file, fullPath);
-
-            // Recursively update children if this is a directory
-            if (file.children) {
-              return {
-                ...file,
-                endpoint: newEndpoint,
-                children: updateEndpoints(file.children, rootFiles),
-              };
-            }
-
-            return {
-              ...file,
-              endpoint: newEndpoint,
-            };
-          });
-        };
-
-        const finalStructure = updateEndpoints(
-          updatedStructure,
-          updatedStructure
-        );
-        setProjectStructure(finalStructure);
-        return;
-      }
-    }
-
-    setProjectStructure(updateStructure(projectStructure, fileId, updates));
-  };
-
-  const deleteFile = (fileId: string) => {
-    const newStructure = deleteFromStructure(projectStructure, fileId);
-    setProjectStructure(newStructure);
-  };
-
-  const getFileById = (id: string) => {
-    return findFileById(projectStructure, id);
-  };
-
-  const getFileByPath = (path: string) => {
-    return findFileByPath(projectStructure, path);
-  };
-
-  const isApiDirectory = (file: ProjectFile | null | undefined): boolean => {
-    if (!file) return false;
-    const parent = findParentFile(projectStructure, file);
-    if (!parent) return false;
-    if (parent.name === AssignedFileNames.api) return true;
-    return isApiDirectory(parent);
+    return true;
   };
 
   return (
@@ -428,14 +378,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         projectStructure,
         currentFile,
         setCurrentFile,
-        updateProjectStructure,
         addFile,
         updateFile,
         deleteFile,
-        getFileById,
         getFileByPath,
-        findParentFile,
-        isApiDirectory,
+        hasApiParent,
+        getLayoutFile,
+        checkApiRestrictions,
+        checkPageRestrictions,
       }}
     >
       {children}

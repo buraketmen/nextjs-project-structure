@@ -1,7 +1,6 @@
 "use client";
 
 import { useProject } from "@/context/project-context";
-import { FileTypes, ProjectFile } from "@/lib/types";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,39 +12,11 @@ import { ChevronRight, HomeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PagesTab() {
-  const { currentFile, projectStructure, isApiDirectory } = useProject();
-
-  // Find the layout file in the same directory
-  const findLayoutFile = (file: ProjectFile | null) => {
-    if (!file) return null;
-    const parent = findParentFile(file);
-    if (!parent?.children) return null;
-    return parent.children.find((child) => child.type === FileTypes.layout);
-  };
-
-  // Helper to find parent file
-  const findParentFile = (file: ProjectFile) => {
-    const findInChildren = (
-      files: ProjectFile[],
-      target: ProjectFile
-    ): ProjectFile | null => {
-      for (const f of files) {
-        if (f.children?.includes(target)) return f;
-        if (f.children) {
-          const found = findInChildren(f.children, target);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    return findInChildren(projectStructure, file);
-  };
-
-  const layoutFile = currentFile ? findLayoutFile(currentFile) : null;
+  const { currentFile, hasApiParent, getLayoutFile } = useProject();
 
   if (!currentFile) return null;
 
-  if (isApiDirectory(currentFile)) {
+  if (hasApiParent(currentFile, false)) {
     return (
       <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground">
         This is an API route. Please use the API tab.
@@ -53,8 +24,9 @@ export function PagesTab() {
     );
   }
 
+  const layoutFile = getLayoutFile(currentFile);
   const pathSegments = currentFile.endpoint?.split("/").filter(Boolean) || [];
-
+  console.log(currentFile);
   return (
     <div className="h-full">
       <div className="pb-4">
