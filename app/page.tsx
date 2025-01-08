@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjectStructure } from "@/components/project";
+import ProjectStructure from "@/components/project";
 import { BrowserView } from "@/components/browser";
 import { ThemeToggle } from "@/components/theme-toggle";
 

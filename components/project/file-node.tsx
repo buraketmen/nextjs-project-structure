@@ -16,7 +16,7 @@ interface FileNodeProps {
 }
 
 export function FileNode({ file, level }: FileNodeProps) {
-  const { currentFileId, setCurrentFileId, updateFile } = useProject();
+  const { currentFile, setCurrentFile, updateFile } = useProject();
   const isDirectory = file.type === "directory";
   const Icon = isDirectory ? Folder : File;
   const [isOpen, setIsOpen] = useState(file.isExpanded || false);
@@ -28,7 +28,7 @@ export function FileNode({ file, level }: FileNodeProps) {
       setIsOpen(!isOpen);
       updateFile(file.id, { isExpanded: !isOpen });
     } else {
-      setCurrentFileId(file.id);
+      setCurrentFile(file);
     }
   };
 
@@ -41,11 +41,11 @@ export function FileNode({ file, level }: FileNodeProps) {
   };
 
   return (
-    <div className={`pl-1 py-0.5`} style={{ marginLeft: `${level * 8}px` }}>
+    <div className={`py-0.5`} style={{ marginLeft: `${level * 8}px` }}>
       <motion.div
         className={cn(
-          "flex items-center gap-2 p-1 rounded hover:bg-accent cursor-pointer group",
-          currentFileId === file.id && "bg-accent"
+          "flex items-center gap-2 p-1 h-[32px] rounded hover:bg-accent cursor-pointer group",
+          currentFile?.id === file.id && "bg-accent"
         )}
         onClick={handleClick}
         whileHover={{ scale: 1.01 }}
@@ -86,11 +86,9 @@ export function FileNode({ file, level }: FileNodeProps) {
           >
             {[...file.children]
               .sort((a, b) => {
-                // First sort by type (directories first)
                 if (a.type === "directory" && b.type !== "directory") return -1;
                 if (a.type !== "directory" && b.type === "directory") return 1;
 
-                // Then sort alphabetically
                 return a.name.localeCompare(b.name);
               })
               .map((child) => (

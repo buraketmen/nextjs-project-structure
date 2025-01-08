@@ -5,6 +5,19 @@ import { ProjectFile, FileType } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { initialStructure } from "@/context/project-data";
 
+const DYNAMIC_ROUTE_PATTERNS = {
+  optionalCatchAll: /\[\[\.\.\.(\w+)\]\]/g,
+  catchAll: /\[\.\.\.(\w+)\]/g,
+  dynamic: /\[(\w+)\]/g,
+};
+
+const replaceDynamicRoutePatterns = (path: string): string => {
+  return path
+    .replace(DYNAMIC_ROUTE_PATTERNS.optionalCatchAll, ":$1?*")
+    .replace(DYNAMIC_ROUTE_PATTERNS.catchAll, ":$1*")
+    .replace(DYNAMIC_ROUTE_PATTERNS.dynamic, ":$1");
+};
+
 const fileConfigs: Record<
   FileType,
   {
@@ -64,9 +77,9 @@ const fileConfigs: Record<
 
 interface ProjectContextType {
   projectStructure: ProjectFile[];
+  currentFile: ProjectFile | null;
+  setCurrentFile: (file: ProjectFile | null) => void;
   updateProjectStructure: (newStructure: ProjectFile[]) => void;
-  currentFileId: string | null;
-  setCurrentFileId: (id: string | null) => void;
   addFile: (parentId: string, type: FileType) => void;
   updateFile: (fileId: string, updates: Partial<ProjectFile>) => void;
   deleteFile: (fileId: string) => void;
@@ -76,6 +89,7 @@ interface ProjectContextType {
     files: ProjectFile[],
     target: ProjectFile
   ) => ProjectFile | null;
+  isApiDirectory: (file: ProjectFile | null | undefined) => boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -83,9 +97,8 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [projectStructure, setProjectStructure] =
     useState<ProjectFile[]>(initialStructure);
-  const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+  const [currentFile, setCurrentFile] = useState<ProjectFile | null>(null);
 
-  // Helper function to find a file by ID in the tree
   const findFileById = (
     files: ProjectFile[],
     id: string
@@ -100,7 +113,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return undefined;
   };
 
-  // Helper function to find a file by path in the tree
   const findFileByPath = (
     files: ProjectFile[],
     path: string
@@ -115,7 +127,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return current;
   };
 
-  // Helper function to build endpoint
   const buildEndpoint = (
     file: ProjectFile,
     parentPath: string = ""
@@ -133,11 +144,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const parts = parentPath.split("/app");
       if (parts.length > 1) {
         const path = parts[1] || "/";
-        // For dynamic routes, replace [param] patterns with :param
-        const dynamicPath = path
-          .replace(/\[\[\.\.\.(\w+)\]\]/g, ":$1?*") // Optional catch-all
-          .replace(/\[\.\.\.(\w+)\]/g, ":$1*") // Catch-all
-          .replace(/\[(\w+)\]/g, ":$1"); // Normal dynamic
+        const dynamicPath = replaceDynamicRoutePatterns(path);
         return dynamicPath.replace(/\/(page|layout)\.tsx$/, "");
       }
       return "/";
@@ -148,17 +155,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const parts = parentPath.split("/app");
       if (parts.length > 1 && parts[1].startsWith("/api")) {
         const path = parts[1] || "/";
-        // For dynamic routes, replace [param] patterns with :param
-        const dynamicPath = path
-          .replace(/\[\[\.\.\.(\w+)\]\]/g, ":$1?*") // Optional catch-all
-          .replace(/\[\.\.\.(\w+)\]/g, ":$1*") // Catch-all
-          .replace(/\[(\w+)\]/g, ":$1"); // Normal dynamic
+        const dynamicPath = replaceDynamicRoutePatterns(path);
         return `/api${dynamicPath.replace("/api", "")}`.replace(
           /\/route\.ts$/,
           ""
         );
       }
-      return null; // Invalid location for API route
+      return null;
     }
 
     // For directories under app
@@ -166,11 +169,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const parts = parentPath.split("/app");
       if (parts.length > 1) {
         const path = parts[1] || "/";
-        // For dynamic routes, replace [param] patterns with :param
-        const dynamicPath = path
-          .replace(/\[\[\.\.\.(\w+)\]\]/g, ":$1?*") // Optional catch-all
-          .replace(/\[\.\.\.(\w+)\]/g, ":$1*") // Catch-all
-          .replace(/\[(\w+)\]/g, ":$1"); // Normal dynamic
+        const dynamicPath = replaceDynamicRoutePatterns(path);
         return dynamicPath === "/api"
           ? dynamicPath
           : dynamicPath.replace(/^\/api\//, "/");
@@ -181,7 +180,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  // Helper function to update file structure
   const updateStructure = (
     files: ProjectFile[],
     id: string,
@@ -265,8 +263,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return hasParentCatchAll(parentFile);
       };
 
-      // Don't allow adding any files under catch-all routes
-      if (hasParentCatchAll(parent)) {
+      // Don't allow adding any files under catch-all routes except for layout, page, and route
+      if (
+        hasParentCatchAll(parent) &&
+        !["layout", "page", "route"].includes(type)
+      ) {
         return;
       }
 
@@ -314,7 +315,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const updateFile = (fileId: string, updates: Partial<ProjectFile>) => {
-    // If making a directory catch-all or optional catch-all, remove all subdirectories
     if (
       updates.dynamicRouteType &&
       (updates.dynamicRouteType === "catch-all" ||
@@ -378,7 +378,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           });
         };
 
-        // Update all endpoints
         const finalStructure = updateEndpoints(
           updatedStructure,
           updatedStructure
@@ -388,7 +387,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // For other updates that don't affect the path
     setProjectStructure(updateStructure(projectStructure, fileId, updates));
   };
 
@@ -405,19 +403,28 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return findFileByPath(projectStructure, path);
   };
 
+  const isApiDirectory = (file: ProjectFile | null | undefined): boolean => {
+    if (!file) return false;
+    const parent = findParentFile(projectStructure, file);
+    if (!parent) return false;
+    if (parent.name === "api") return true;
+    return isApiDirectory(parent);
+  };
+
   return (
     <ProjectContext.Provider
       value={{
         projectStructure,
+        currentFile,
+        setCurrentFile,
         updateProjectStructure,
-        currentFileId,
-        setCurrentFileId,
         addFile,
         updateFile,
         deleteFile,
         getFileById,
         getFileByPath,
         findParentFile,
+        isApiDirectory,
       }}
     >
       {children}

@@ -3,10 +3,9 @@
 import { useProject } from "@/context/project-context";
 
 export function ApiTab() {
-  const { currentFileId, getFileById } = useProject();
-  const currentFile = currentFileId ? getFileById(currentFileId) : null;
+  const { currentFile, isApiDirectory } = useProject();
 
-  if (!currentFile?.endpoint?.startsWith("/api")) {
+  if (!isApiDirectory(currentFile)) {
     return (
       <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground">
         This is a page route. Please use the Pages tab.
@@ -19,7 +18,7 @@ export function ApiTab() {
       <pre className="text-sm">
         {JSON.stringify(
           {
-            path: currentFile.endpoint,
+            path: currentFile?.endpoint,
             method: "GET",
             response: {
               status: 200,

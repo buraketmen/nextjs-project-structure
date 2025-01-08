@@ -14,8 +14,7 @@ import { ChevronRight, HomeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PagesTab() {
-  const { currentFileId, projectStructure, getFileById } = useProject();
-  const currentFile = currentFileId ? getFileById(currentFileId) : null;
+  const { currentFile, projectStructure, isApiDirectory } = useProject();
 
   // Find the layout file in the same directory
   const findLayoutFile = (file: ProjectFile | null) => {
@@ -47,7 +46,7 @@ export function PagesTab() {
 
   if (!currentFile) return null;
 
-  if (currentFile?.endpoint?.startsWith("/api")) {
+  if (isApiDirectory(currentFile)) {
     return (
       <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground">
         This is an API route. Please use the API tab.
@@ -55,7 +54,6 @@ export function PagesTab() {
     );
   }
 
-  // Build path segments
   const pathSegments = currentFile.endpoint?.split("/").filter(Boolean) || [];
 
   return (
@@ -65,10 +63,13 @@ export function PagesTab() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <HomeIcon className="h-4 w-4" />
+              <span>Home</span>
             </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4" />
-            </BreadcrumbSeparator>
+            {pathSegments.length > 0 && (
+              <BreadcrumbSeparator>
+                <ChevronRight className="h-4 w-4" />
+              </BreadcrumbSeparator>
+            )}
             {pathSegments.map((segment, index) => (
               <BreadcrumbItem key={index}>
                 {index === pathSegments.length - 1 ? (

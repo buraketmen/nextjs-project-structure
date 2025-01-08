@@ -25,7 +25,6 @@ export function RenameDialog({
 }: RenameDialogProps) {
   const [newName, setNewName] = useState(file.name);
 
-  // Reset name when dialog opens
   useEffect(() => {
     if (open) {
       setNewName(file.name);

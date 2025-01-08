@@ -25,7 +25,6 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
 
   const handleAddFile = (type: FileType) => {
     addFile(file.id, type);
-    // Update the parent directory's isExpanded state
     updateFile(file.id, { isExpanded: true });
     setIsDropdownOpen(false);
   };

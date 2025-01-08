@@ -34,7 +34,6 @@ export function DynamicRouteMenu({
   const handleMakeDynamic = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (file.isDynamic) {
-      // Make static
       onUpdateFile({
         isDynamic: false,
         dynamicRouteType: null,
@@ -42,7 +41,6 @@ export function DynamicRouteMenu({
       });
       setIsDropdownOpen(false);
     } else {
-      // Make dynamic (normal by default)
       onUpdateFile({
         isDynamic: true,
         dynamicRouteType: "normal",
@@ -50,14 +48,6 @@ export function DynamicRouteMenu({
       });
     }
   };
-
-  // If it's an API directory and already dynamic, force normal type
-  if (isApiDirectory && file.isDynamic && file.dynamicRouteType !== "normal") {
-    onUpdateFile({
-      dynamicRouteType: "normal",
-      name: "[id]",
-    });
-  }
 
   return (
     <>
@@ -86,7 +76,7 @@ export function DynamicRouteMenu({
                 name: "[...slug]",
               });
               if (file.children?.some((child) => child.type === "directory")) {
-                alert(
+                console.log(
                   "Converting to catch-all route. All subdirectories will be removed."
                 );
               }
@@ -102,7 +92,7 @@ export function DynamicRouteMenu({
                 name: "[[...slug]]",
               });
               if (file.children?.some((child) => child.type === "directory")) {
-                alert(
+                console.log(
                   "Converting to optional catch-all route. All subdirectories will be removed."
                 );
               }
