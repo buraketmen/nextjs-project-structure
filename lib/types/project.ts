@@ -1,4 +1,27 @@
-export type FileType = "directory" | "page" | "layout" | "route" | "file";
+export const FileTypes = {
+  directory: "directory",
+  page: "page",
+  layout: "layout",
+  route: "route",
+  file: "file",
+} as const;
+
+export type FileType = (typeof FileTypes)[keyof typeof FileTypes];
+
+export const AssignedFileNames = {
+  api: "api",
+  app: "app",
+  public: "public",
+  components: "components",
+  lib: "lib",
+  src: "src",
+} as const;
+
+export const DynamicRouteTypes = {
+  normal: "normal",
+  catchAll: "catch-all",
+  optionalCatchAll: "optional-catch-all",
+} as const;
 
 export type DynamicRouteType =
   | "normal"

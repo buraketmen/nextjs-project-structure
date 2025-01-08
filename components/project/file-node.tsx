@@ -5,7 +5,7 @@ import { ChevronRight, File, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ProjectFile } from "@/lib/types";
+import { FileTypes, ProjectFile } from "@/lib/types";
 import { FileMenu } from "./file-menu";
 import { StyleDialog } from "./style-dialog";
 import { RenameDialog } from "./rename-dialog";
@@ -17,7 +17,7 @@ interface FileNodeProps {
 
 export function FileNode({ file, level }: FileNodeProps) {
   const { currentFile, setCurrentFile, updateFile } = useProject();
-  const isDirectory = file.type === "directory";
+  const isDirectory = file.type === FileTypes.directory;
   const Icon = isDirectory ? Folder : File;
   const [isOpen, setIsOpen] = useState(file.isExpanded || false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
@@ -86,8 +86,16 @@ export function FileNode({ file, level }: FileNodeProps) {
           >
             {[...file.children]
               .sort((a, b) => {
-                if (a.type === "directory" && b.type !== "directory") return -1;
-                if (a.type !== "directory" && b.type === "directory") return 1;
+                if (
+                  a.type === FileTypes.directory &&
+                  b.type !== FileTypes.directory
+                )
+                  return -1;
+                if (
+                  a.type !== FileTypes.directory &&
+                  b.type === FileTypes.directory
+                )
+                  return 1;
 
                 return a.name.localeCompare(b.name);
               })

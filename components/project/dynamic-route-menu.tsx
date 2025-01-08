@@ -1,4 +1,9 @@
-import { ProjectFile } from "@/lib/types";
+import {
+  AssignedFileNames,
+  DynamicRouteTypes,
+  ProjectFile,
+  FileTypes,
+} from "@/lib/types";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Menu } from "lucide-react";
 import { useProject } from "@/context/project-context";
@@ -15,20 +20,20 @@ export function DynamicRouteMenu({
   setIsDropdownOpen,
 }: DynamicRouteMenuProps) {
   const { projectStructure, findParentFile } = useProject();
-  const isApiRoot = file.name === "api";
+  const isApiRoot = file.name === AssignedFileNames.api;
 
   // Check if this file is under the API directory
   const hasApiParent = (currentFile: ProjectFile): boolean => {
     const parent = findParentFile(projectStructure, currentFile);
     if (!parent) return false;
-    if (parent.name === "api") return true;
+    if (parent.name === AssignedFileNames.api) return true;
     return hasApiParent(parent);
   };
 
   const isApiDirectory = hasApiParent(file);
 
   // Don't show dynamic options for API root or non-directories
-  if (file.type !== "directory" || isApiRoot) return null;
+  if (file.type !== FileTypes.directory || isApiRoot) return null;
 
   // For API directories, only allow normal dynamic routes
   const handleMakeDynamic = (e: React.MouseEvent) => {
@@ -43,7 +48,7 @@ export function DynamicRouteMenu({
     } else {
       onUpdateFile({
         isDynamic: true,
-        dynamicRouteType: "normal",
+        dynamicRouteType: DynamicRouteTypes.normal,
         name: isApiDirectory ? "[id]" : "[slug]",
       });
     }
@@ -61,7 +66,7 @@ export function DynamicRouteMenu({
             onClick={(e) => {
               e.stopPropagation();
               onUpdateFile({
-                dynamicRouteType: "normal",
+                dynamicRouteType: DynamicRouteTypes.normal,
                 name: "[slug]",
               });
             }}
@@ -72,10 +77,14 @@ export function DynamicRouteMenu({
             onClick={(e) => {
               e.stopPropagation();
               onUpdateFile({
-                dynamicRouteType: "catch-all",
+                dynamicRouteType: DynamicRouteTypes.catchAll,
                 name: "[...slug]",
               });
-              if (file.children?.some((child) => child.type === "directory")) {
+              if (
+                file.children?.some(
+                  (child) => child.type === FileTypes.directory
+                )
+              ) {
                 console.log(
                   "Converting to catch-all route. All subdirectories will be removed."
                 );
@@ -91,7 +100,11 @@ export function DynamicRouteMenu({
                 dynamicRouteType: "optional-catch-all",
                 name: "[[...slug]]",
               });
-              if (file.children?.some((child) => child.type === "directory")) {
+              if (
+                file.children?.some(
+                  (child) => child.type === FileTypes.directory
+                )
+              ) {
                 console.log(
                   "Converting to optional catch-all route. All subdirectories will be removed."
                 );
@@ -107,7 +120,7 @@ export function DynamicRouteMenu({
           onClick={(e) => {
             e.stopPropagation();
             onUpdateFile({
-              dynamicRouteType: "normal",
+              dynamicRouteType: DynamicRouteTypes.normal,
               name: "[id]",
             });
           }}

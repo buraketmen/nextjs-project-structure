@@ -1,7 +1,13 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { ProjectFile, FileType } from "@/lib/types";
+import {
+  ProjectFile,
+  FileType,
+  AssignedFileNames,
+  FileTypes,
+  DynamicRouteTypes,
+} from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { initialStructure } from "@/context/project-data";
 
@@ -33,7 +39,7 @@ const fileConfigs: Record<
 > = {
   directory: {
     name: "new-folder",
-    type: "directory",
+    type: FileTypes.directory,
     isEditable: true,
     isDeletable: true,
     isRenameable: true,
@@ -43,7 +49,7 @@ const fileConfigs: Record<
   },
   page: {
     name: "page.tsx",
-    type: "page",
+    type: FileTypes.page,
     isEditable: true,
     isDeletable: true,
     isRenameable: false,
@@ -51,7 +57,7 @@ const fileConfigs: Record<
   },
   layout: {
     name: "layout.tsx",
-    type: "layout",
+    type: FileTypes.layout,
     isEditable: true,
     isDeletable: true,
     isRenameable: false,
@@ -59,7 +65,7 @@ const fileConfigs: Record<
   },
   route: {
     name: "route.ts",
-    type: "route",
+    type: FileTypes.route,
     isEditable: true,
     isDeletable: true,
     isRenameable: false,
@@ -67,7 +73,7 @@ const fileConfigs: Record<
   },
   file: {
     name: "file.ts",
-    type: "file",
+    type: FileTypes.file,
     isEditable: true,
     isDeletable: true,
     isRenameable: true,
@@ -140,7 +146,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     // For page.tsx and layout.tsx, use parent path
-    if (file.type === "page" || file.type === "layout") {
+    if (file.type === FileTypes.page || file.type === FileTypes.layout) {
       const parts = parentPath.split("/app");
       if (parts.length > 1) {
         const path = parts[1] || "/";
@@ -151,7 +157,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     // For API routes - only valid under /api directory
-    if (file.type === "route") {
+    if (file.type === FileTypes.route) {
       const parts = parentPath.split("/app");
       if (parts.length > 1 && parts[1].startsWith("/api")) {
         const path = parts[1] || "/";
@@ -165,7 +171,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     // For directories under app
-    if (file.type === "directory" && parentPath.includes("/app")) {
+    if (file.type === FileTypes.directory && parentPath.includes("/app")) {
       const parts = parentPath.split("/app");
       if (parts.length > 1) {
         const path = parts[1] || "/";
@@ -236,7 +242,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const newStructure = [...projectStructure];
     const parent = findFileById(newStructure, parentId);
 
-    if (parent && parent.type === "directory") {
+    if (parent && parent.type === FileTypes.directory) {
       // Calculate parent path first to check if we can add the file
       const getFullPath = (file: ProjectFile): string => {
         const parts: string[] = [file.name];
@@ -253,8 +259,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       // Check if parent or any ancestor is a catch-all route
       const hasParentCatchAll = (currentFile: ProjectFile): boolean => {
         if (
-          currentFile.dynamicRouteType === "catch-all" ||
-          currentFile.dynamicRouteType === "optional-catch-all"
+          currentFile.dynamicRouteType === DynamicRouteTypes.catchAll ||
+          currentFile.dynamicRouteType === DynamicRouteTypes.optionalCatchAll
         ) {
           return true;
         }
@@ -266,13 +272,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       // Don't allow adding any files under catch-all routes except for layout, page, and route
       if (
         hasParentCatchAll(parent) &&
-        !["layout", "page", "route"].includes(type)
+        type !== FileTypes.layout &&
+        type !== FileTypes.page &&
+        type !== FileTypes.route
       ) {
         return;
       }
 
       // Check if we can add an API route here
-      if (type === "route" && !parentPath.includes("/api")) {
+      if (type === FileTypes.route && !parentPath.includes("/api")) {
         return; // Can't add API route outside of /api directory
       }
 
@@ -283,16 +291,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
       // Check if we can add this file
       const children = parent.children || [];
-      if (type === "page" && children.some((child) => child.type === "page"))
+      if (
+        type === FileTypes.page &&
+        children.some((child) => child.type === FileTypes.page)
+      )
         return;
       if (
-        type === "layout" &&
-        children.some((child) => child.type === "layout")
+        type === FileTypes.layout &&
+        children.some((child) => child.type === FileTypes.layout)
       )
         return;
 
       // Generate unique name for directories
-      if (type === "directory") {
+      if (type === FileTypes.directory) {
         const baseName = "new-folder";
         let counter = 1;
         newFile.name = baseName;
@@ -307,7 +318,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       newFile.endpoint = buildEndpoint(newFile, parentPath);
 
       // Only add the file if it has a valid endpoint (or is not a route)
-      if (type !== "route" || newFile.endpoint !== null) {
+      if (type !== FileTypes.route || newFile.endpoint !== null) {
         parent.children = [...children, newFile];
         setProjectStructure(newStructure);
       }
@@ -317,15 +328,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const updateFile = (fileId: string, updates: Partial<ProjectFile>) => {
     if (
       updates.dynamicRouteType &&
-      (updates.dynamicRouteType === "catch-all" ||
-        updates.dynamicRouteType === "optional-catch-all")
+      (updates.dynamicRouteType === DynamicRouteTypes.catchAll ||
+        updates.dynamicRouteType === DynamicRouteTypes.optionalCatchAll)
     ) {
       const initialStructure = [...projectStructure];
       const file = findFileById(initialStructure, fileId);
       if (file && file.children) {
         // Remove all subdirectories but keep files
         file.children = file.children.filter(
-          (child) => child.type !== "directory"
+          (child) => child.type !== FileTypes.directory
         );
       }
     }
@@ -407,7 +418,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     if (!file) return false;
     const parent = findParentFile(projectStructure, file);
     if (!parent) return false;
-    if (parent.name === "api") return true;
+    if (parent.name === AssignedFileNames.api) return true;
     return isApiDirectory(parent);
   };
 

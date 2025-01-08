@@ -1,4 +1,10 @@
-import { ProjectFile, FileType } from "@/lib/types";
+import {
+  ProjectFile,
+  FileType,
+  FileTypes,
+  AssignedFileNames,
+  DynamicRouteTypes,
+} from "@/lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +27,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
   const { addFile, updateFile, deleteFile, projectStructure, findParentFile } =
     useProject();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const isDirectory = file.type === "directory";
+  const isDirectory = file.type === FileTypes.directory;
 
   const handleAddFile = (type: FileType) => {
     addFile(file.id, type);
@@ -32,10 +38,10 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
   const checkApiDirectoryRestrictions = (type: FileType): boolean => {
     // Check if this file is under the API directory
     const hasApiParent = (currentFile: ProjectFile): boolean => {
-      if (currentFile.name === "api") return true;
+      if (currentFile.name === AssignedFileNames.api) return true;
       const parent = findParentFile(projectStructure, currentFile);
       if (!parent) return false;
-      if (parent.name === "api") return true;
+      if (parent.name === AssignedFileNames.api) return true;
       return hasApiParent(parent);
     };
 
@@ -44,18 +50,18 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
     // If under API directory, only allow API routes and directories
     if (isUnderApi) {
       // No page or layout files under API directory
-      if (type === "page" || type === "layout") {
+      if (type === FileTypes.page || type === FileTypes.layout) {
         return false;
       }
 
       // For route type, check if one already exists
-      if (type === "route") {
-        return !file.children?.some((child) => child.type === "route");
+      if (type === FileTypes.route) {
+        return !file.children?.some((child) => child.type === FileTypes.route);
       }
     }
 
     // Not under API directory, don't allow API routes
-    if (type === "route" && !isUnderApi) {
+    if (type === FileTypes.route && !isUnderApi) {
       return false;
     }
 
@@ -65,17 +71,17 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
   const checkPageRestrictions = (type: FileType): boolean => {
     // Handle catch-all route restrictions
     const isCatchAllRoute =
-      file.dynamicRouteType === "catch-all" ||
-      file.dynamicRouteType === "optional-catch-all";
+      file.dynamicRouteType === DynamicRouteTypes.catchAll ||
+      file.dynamicRouteType === DynamicRouteTypes.optionalCatchAll;
     if (isCatchAllRoute) {
       // Only allow layout files in catch-all routes
-      if (type === "page" || type === "directory") {
+      if (type === FileTypes.page || type === FileTypes.directory) {
         return false;
       }
     }
 
     // Check for existing files of the same type
-    if (type === "page" || type === "layout") {
+    if (type === FileTypes.page || type === FileTypes.layout) {
       return !file.children?.some((child) => child.type === type);
     }
 
@@ -111,41 +117,41 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
       <DropdownMenuContent align="end">
         {isDirectory && (
           <>
-            {canAddFileType("directory") && (
+            {canAddFileType(FileTypes.directory) && (
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddFile("directory");
+                  handleAddFile(FileTypes.directory);
                 }}
               >
                 <Plus size={16} className="mr-2" /> Add Folder
               </DropdownMenuItem>
             )}
-            {canAddFileType("page") && (
+            {canAddFileType(FileTypes.page) && (
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddFile("page");
+                  handleAddFile(FileTypes.page);
                 }}
               >
                 <Plus size={16} className="mr-2" /> Add Page
               </DropdownMenuItem>
             )}
-            {canAddFileType("layout") && (
+            {canAddFileType(FileTypes.layout) && (
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddFile("layout");
+                  handleAddFile(FileTypes.layout);
                 }}
               >
                 <Plus size={16} className="mr-2" /> Add Layout
               </DropdownMenuItem>
             )}
-            {canAddFileType("route") && (
+            {canAddFileType(FileTypes.route) && (
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddFile("route");
+                  handleAddFile(FileTypes.route);
                 }}
               >
                 <Plus size={16} className="mr-2" /> Add API Route
@@ -160,7 +166,7 @@ export function FileMenu({ file, onRename, onEditStyles }: FileMenuProps) {
             setIsDropdownOpen={setIsDropdownOpen}
           />
         )}
-        {file.type === "layout" && (
+        {file.type === FileTypes.layout && (
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();

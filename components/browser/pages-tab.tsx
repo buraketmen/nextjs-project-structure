@@ -1,11 +1,10 @@
 "use client";
 
 import { useProject } from "@/context/project-context";
-import { ProjectFile } from "@/lib/types";
+import { FileTypes, ProjectFile } from "@/lib/types";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -21,7 +20,7 @@ export function PagesTab() {
     if (!file) return null;
     const parent = findParentFile(file);
     if (!parent?.children) return null;
-    return parent.children.find((child) => child.type === "layout");
+    return parent.children.find((child) => child.type === FileTypes.layout);
   };
 
   // Helper to find parent file

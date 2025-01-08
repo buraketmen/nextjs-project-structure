@@ -1,11 +1,11 @@
-import { ProjectFile } from "@/lib/types";
+import { AssignedFileNames, FileTypes, ProjectFile } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 
 export const initialStructure: ProjectFile[] = [
   {
     id: uuidv4(),
-    name: "src",
-    type: "directory",
+    name: AssignedFileNames.src,
+    type: FileTypes.directory,
     endpoint: null,
     isExpanded: true,
     isEditable: false,
@@ -14,8 +14,8 @@ export const initialStructure: ProjectFile[] = [
     children: [
       {
         id: uuidv4(),
-        name: "app",
-        type: "directory",
+        name: AssignedFileNames.app,
+        type: FileTypes.directory,
         endpoint: "/",
         isExpanded: true,
         isEditable: false,
@@ -25,7 +25,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "dashboard",
-            type: "directory",
+            type: FileTypes.directory,
             endpoint: "/dashboard",
             isExpanded: true,
             isEditable: true,
@@ -35,7 +35,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "page.tsx",
-                type: "page",
+                type: FileTypes.page,
                 endpoint: "/dashboard",
                 isEditable: true,
                 isRenameable: false,
@@ -44,7 +44,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "settings",
-                type: "directory",
+                type: FileTypes.directory,
                 endpoint: "/dashboard/settings",
                 isExpanded: true,
                 isEditable: true,
@@ -54,7 +54,7 @@ export const initialStructure: ProjectFile[] = [
                   {
                     id: uuidv4(),
                     name: "page.tsx",
-                    type: "page",
+                    type: FileTypes.page,
                     endpoint: "/dashboard/settings",
                     isEditable: true,
                     isRenameable: false,
@@ -66,8 +66,8 @@ export const initialStructure: ProjectFile[] = [
           },
           {
             id: uuidv4(),
-            name: "api",
-            type: "directory",
+            name: AssignedFileNames.api,
+            type: FileTypes.directory,
             endpoint: "/api",
             isExpanded: true,
             isEditable: true,
@@ -77,7 +77,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "route.ts",
-                type: "route",
+                type: FileTypes.route,
                 endpoint: "/api",
                 isEditable: false,
                 isRenameable: false,
@@ -88,7 +88,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "layout.tsx",
-            type: "layout",
+            type: FileTypes.layout,
             endpoint: "/",
             isEditable: false,
             isRenameable: false,
@@ -97,7 +97,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "page.tsx",
-            type: "page",
+            type: FileTypes.page,
             endpoint: "/",
             isEditable: false,
             isRenameable: false,
@@ -107,8 +107,8 @@ export const initialStructure: ProjectFile[] = [
       },
       {
         id: uuidv4(),
-        name: "components",
-        type: "directory",
+        name: AssignedFileNames.components,
+        type: FileTypes.directory,
         endpoint: null,
         isEditable: false,
         isRenameable: false,
@@ -117,7 +117,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "ui",
-            type: "directory",
+            type: FileTypes.directory,
             endpoint: null,
             isExpanded: false,
             isEditable: false,
@@ -127,7 +127,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "button.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -136,7 +136,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "collapsible.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -145,7 +145,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "dialog.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -154,7 +154,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "dropdown-menu.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -163,7 +163,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "input.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -172,7 +172,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "label.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -181,7 +181,7 @@ export const initialStructure: ProjectFile[] = [
               {
                 id: uuidv4(),
                 name: "tabs.tsx",
-                type: "file",
+                type: FileTypes.file,
                 endpoint: null,
                 isEditable: false,
                 isRenameable: false,
@@ -192,7 +192,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "browser-view.tsx",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isExpanded: false,
             isEditable: false,
@@ -202,7 +202,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "folder-structure.tsx",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isExpanded: false,
             isEditable: false,
@@ -212,7 +212,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "file-node.tsx",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isExpanded: false,
             isEditable: false,
@@ -223,8 +223,8 @@ export const initialStructure: ProjectFile[] = [
       },
       {
         id: uuidv4(),
-        name: "lib",
-        type: "directory",
+        name: AssignedFileNames.lib,
+        type: FileTypes.directory,
         endpoint: null,
         isEditable: false,
         isRenameable: false,
@@ -233,7 +233,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "utils.ts",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isEditable: false,
             isRenameable: false,
@@ -245,8 +245,8 @@ export const initialStructure: ProjectFile[] = [
   },
   {
     id: uuidv4(),
-    name: "public",
-    type: "directory",
+    name: AssignedFileNames.public,
+    type: FileTypes.directory,
     endpoint: null,
     isExpanded: false,
     isEditable: false,
@@ -256,7 +256,7 @@ export const initialStructure: ProjectFile[] = [
       {
         id: uuidv4(),
         name: "static",
-        type: "directory",
+        type: FileTypes.directory,
         endpoint: null,
         isExpanded: false,
         isEditable: false,
@@ -266,7 +266,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "avatar.jpg",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isEditable: false,
             isRenameable: false,
@@ -275,7 +275,7 @@ export const initialStructure: ProjectFile[] = [
           {
             id: uuidv4(),
             name: "me.png",
-            type: "file",
+            type: FileTypes.file,
             endpoint: null,
             isEditable: false,
             isRenameable: false,
@@ -286,7 +286,7 @@ export const initialStructure: ProjectFile[] = [
       {
         id: uuidv4(),
         name: "favicon.ico",
-        type: "file",
+        type: FileTypes.file,
         endpoint: null,
         isEditable: false,
         isRenameable: false,
@@ -295,7 +295,7 @@ export const initialStructure: ProjectFile[] = [
       {
         id: uuidv4(),
         name: "robots.txt",
-        type: "file",
+        type: FileTypes.file,
         endpoint: null,
         isEditable: false,
         isRenameable: false,
@@ -304,7 +304,7 @@ export const initialStructure: ProjectFile[] = [
       {
         id: uuidv4(),
         name: "manifest.json",
-        type: "file",
+        type: FileTypes.file,
         endpoint: null,
         isEditable: false,
         isRenameable: false,
