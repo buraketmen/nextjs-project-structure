@@ -221,19 +221,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // If name is being updated or dynamic route type changes, we need to recalculate endpoints
     if (updates.name || updates.dynamicRouteType || updates.isDynamic) {
       const initialStructure = [...projectStructure];
       const file = findFileById(initialStructure, fileId);
       if (file) {
-        // Update the file first
         const updatedStructure = updateStructure(
           initialStructure,
           fileId,
           updates
         );
 
-        // Helper function to update endpoints recursively
         const updateEndpoints = (
           files: ProjectFile[],
           rootFiles: ProjectFile[]
@@ -287,8 +284,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    // For page.tsx and layout.tsx, use parent path
-    if (file.type === FileTypes.page || file.type === FileTypes.layout) {
+    // For page.tsx, use parent path
+    if (file.type === FileTypes.page) {
       const parts = parentPath.split("/app");
       if (parts.length > 1) {
         const path = parts[1] || "/";

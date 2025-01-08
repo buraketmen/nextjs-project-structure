@@ -5,10 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface RenameDialogProps {
   file: ProjectFile;
@@ -24,17 +26,40 @@ export function RenameDialog({
   onRename,
 }: RenameDialogProps) {
   const [newName, setNewName] = useState(file.name);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setNewName(file.name);
+      setError(null);
     }
   }, [open, file.name]);
 
+  const validateName = (name: string): boolean => {
+    if (name.trim() === "") {
+      setError("Name cannot be empty");
+      return false;
+    }
+    if (name.includes(" ")) {
+      setError("Name cannot contain spaces");
+      return false;
+    }
+    if (name.startsWith("_") || name.startsWith("(") || name.endsWith(")")) {
+      setError(
+        "Special prefixes like _ and () are not allowed. Use the dropdown menu instead."
+      );
+      return false;
+    }
+    if (!/^[a-zA-Z0-9-]+$/.test(name)) {
+      setError("Name can only contain letters, numbers, hyphens, and dots");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
   const handleSave = () => {
-    if (newName.trim() === "") {
-      setNewName(file.name);
-      onOpenChange(false);
+    if (!validateName(newName)) {
       return;
     }
 
@@ -43,7 +68,7 @@ export function RenameDialog({
       return;
     }
 
-    onRename(newName.trim());
+    onRename(newName);
     onOpenChange(false);
   };
 
@@ -51,6 +76,14 @@ export function RenameDialog({
     if (e.key === "Enter") {
       handleSave();
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+      .replace(/\s/g, "")
+      .replace(/[^a-zA-Z0-9-]/g, "");
+    setNewName(value);
+    validateName(value);
   };
 
   return (
@@ -61,20 +94,32 @@ export function RenameDialog({
       >
         <DialogHeader>
           <DialogTitle>Rename {file.type}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground text-justify">
+            Enter a new name for the file. Only letters, numbers, and hyphens
+            are allowed.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            autoFocus
-          />
+          <div className="space-y-2">
+            <Input
+              value={newName}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              maxLength={32}
+              aria-invalid={error ? "true" : "false"}
+              className={cn(error && "border-red-500")}
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+          </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save</Button>
+          <Button onClick={handleSave} disabled={!!error}>
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -44,7 +44,7 @@ export default function Home() {
         <ResizablePanel
           defaultSize={orientation === "horizontal" ? 25 : 40}
           minSize={orientation === "horizontal" ? 20 : 30}
-          maxSize={orientation === "horizontal" ? 40 : 80}
+          maxSize={orientation === "horizontal" ? 50 : 80}
           className={
             orientation === "horizontal" ? "min-w-[250px]" : "min-h-[200px]"
           }
@@ -56,7 +56,7 @@ export default function Home() {
               "dark:border-gray-800"
             )}
           >
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4 border-b-2 pb-4">
               <h1 className="text-xl font-bold truncate">Next.js Structure</h1>
               <ThemeToggle />
             </div>

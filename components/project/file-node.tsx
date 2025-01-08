@@ -73,10 +73,7 @@ export function FileNode({ file, level }: FileNodeProps) {
         <span className="truncate">{file.name}</span>
 
         {file.isEditable && (
-          <div
-            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="ml-auto" onClick={(e) => e.stopPropagation()}>
             <FileMenu
               file={file}
               onRename={() => setIsRenameDialogOpen(true)}

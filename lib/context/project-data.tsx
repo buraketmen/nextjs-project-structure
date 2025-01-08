@@ -89,7 +89,7 @@ export const initialStructure: ProjectFile[] = [
             id: uuidv4(),
             name: "layout.tsx",
             type: FileTypes.layout,
-            endpoint: "/",
+            endpoint: null,
             isEditable: false,
             isRenameable: false,
             isDeletable: false,

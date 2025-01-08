@@ -1,20 +1,11 @@
 "use client";
 
 import { useProject } from "@/context/project-context";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { ChevronRight, HomeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PageBreadcrumb from "./page-breadcrumb";
 
 export function PagesTab() {
   const { currentFile, hasApiParent, getLayoutFile } = useProject();
-
-  if (!currentFile) return null;
 
   if (hasApiParent(currentFile, false)) {
     return (
@@ -25,43 +16,17 @@ export function PagesTab() {
   }
 
   const layoutFile = getLayoutFile(currentFile);
-  const pathSegments = currentFile.endpoint?.split("/").filter(Boolean) || [];
-  console.log(currentFile);
+
   return (
     <div className="h-full">
       <div className="pb-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <HomeIcon className="h-4 w-4" />
-              <span>Home</span>
-            </BreadcrumbItem>
-            {pathSegments.length > 0 && (
-              <BreadcrumbSeparator>
-                <ChevronRight className="h-4 w-4" />
-              </BreadcrumbSeparator>
-            )}
-            {pathSegments.map((segment, index) => (
-              <BreadcrumbItem key={index}>
-                {index === pathSegments.length - 1 ? (
-                  <BreadcrumbPage>{segment}</BreadcrumbPage>
-                ) : (
-                  <>
-                    <span>{segment}</span>
-                    <BreadcrumbSeparator>
-                      <ChevronRight className="h-4 w-4" />
-                    </BreadcrumbSeparator>
-                  </>
-                )}
-              </BreadcrumbItem>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
+        <PageBreadcrumb />
       </div>
 
       <div
-        className={cn("p-4 rounded-lg min-h-[250px] border", {
-          "bg-secondary": true,
+        className={cn("p-4 rounded-lg min-h-[250px] ", {
+          "bg-accent": true,
+          "flex items-center justify-center": !currentFile?.endpoint,
         })}
         style={
           layoutFile?.customStyles
@@ -72,12 +37,10 @@ export function PagesTab() {
             : undefined
         }
       >
-        {!currentFile?.endpoint || currentFile.endpoint === "/" ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Select a page from the project structure
-          </div>
-        ) : (
+        {currentFile?.endpoint ? (
           <div>Content for {currentFile.endpoint}</div>
+        ) : (
+          <p>Select a page from the project structure.</p>
         )}
       </div>
     </div>

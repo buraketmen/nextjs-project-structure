@@ -4,18 +4,17 @@ import { useProject } from "@/context/project-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PagesTab } from "./pages-tab";
 import { ApiTab } from "./api-tab";
+import UrlShower from "./url-shower";
 
 export function BrowserView() {
   const { currentFile, hasApiParent } = useProject();
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 p-2 bg-accent rounded-lg mb-2">
-        <span className="text-sm text-muted-foreground">localhost:3000</span>
-        <div className="flex-1 bg-background px-3 py-1 rounded text-sm">
-          {currentFile?.endpoint || "/"}
-        </div>
+      <div className="mb-2">
+        <UrlShower />
       </div>
+
       <Tabs
         defaultValue={hasApiParent(currentFile, false) ? "api" : "pages"}
         className="flex-1"
