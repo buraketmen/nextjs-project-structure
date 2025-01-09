@@ -1,4 +1,4 @@
-import { ProjectFile } from "@/lib/types";
+import { ProjectFile, AssignedFileNames } from "@/types/project";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { clearFolderName, cn } from "@/lib/utils";
 
 interface RenameDialogProps {
   file: ProjectFile;
@@ -25,12 +25,12 @@ export function RenameDialog({
   onOpenChange,
   onRename,
 }: RenameDialogProps) {
-  const [newName, setNewName] = useState(file.name);
+  const [newName, setNewName] = useState(clearFolderName(file.name));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
-      setNewName(file.name);
+      setNewName(clearFolderName(file.name));
       setError(null);
     }
   }, [open, file.name]);
@@ -50,8 +50,12 @@ export function RenameDialog({
       );
       return false;
     }
-    if (!/^[a-zA-Z0-9-]+$/.test(name)) {
-      setError("Name can only contain letters, numbers, hyphens, and dots");
+    if (!/^[a-zA-Z]+$/.test(name)) {
+      setError("Name can only contain letters.");
+      return false;
+    }
+    if (Object.values(AssignedFileNames).includes(name as any)) {
+      setError("This name is reserved and cannot be used");
       return false;
     }
     setError(null);
@@ -60,6 +64,7 @@ export function RenameDialog({
 
   const handleSave = () => {
     if (!validateName(newName)) {
+      console.log("error");
       return;
     }
 
@@ -67,7 +72,6 @@ export function RenameDialog({
       onOpenChange(false);
       return;
     }
-
     onRename(newName);
     onOpenChange(false);
   };
@@ -79,9 +83,7 @@ export function RenameDialog({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-      .replace(/\s/g, "")
-      .replace(/[^a-zA-Z0-9-]/g, "");
+    const value = e.target.value.replace(/\s/g, "").replace(/[^a-zA-Z]/g, "");
     setNewName(value);
     validateName(value);
   };
@@ -95,8 +97,8 @@ export function RenameDialog({
         <DialogHeader>
           <DialogTitle>Rename {file.type}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground text-justify">
-            Enter a new name for the file. Only letters, numbers, and hyphens
-            are allowed.
+            Enter a new name for the file. Only letters are allowed. camelCase
+            is recommended.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

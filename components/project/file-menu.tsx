@@ -1,4 +1,4 @@
-import { ProjectFile, FileType, FileTypes } from "@/lib/types";
+import { ProjectFile, FileType, FileTypes, RouteTypes } from "@/types/project";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,17 +6,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import {
-  MoreVertical,
-  Settings,
-  Edit2,
-  Trash,
-  FolderPlus,
-  FilePlus,
-} from "lucide-react";
+import { MoreVertical, Settings, Edit2, Trash } from "lucide-react";
 import { useState } from "react";
 import { useProject } from "@/context/project-context";
-import { DynamicRouteMenu } from "./dynamic-route-menu";
+import FileMenuDirectory from "./file-menu-directory";
+import FileMenuFile from "./file-menu-file";
 
 interface FileMenuProps {
   file: ProjectFile;
@@ -31,44 +25,34 @@ export function FileMenu({
   onEditStyles,
   onOpenChange,
 }: FileMenuProps) {
-  const {
-    addFile,
-    updateFile,
-    deleteFile,
-    checkApiRestrictions,
-    checkPageRestrictions,
-  } = useProject();
+  const { deleteFile } = useProject();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const isDirectory = file.type === FileTypes.directory;
 
   const handleOpenChange = (open: boolean) => {
     setIsDropdownOpen(open);
     onOpenChange?.(open);
   };
 
-  const handleAddFile = (type: FileType) => {
+  const handleRename = () => {
     handleOpenChange(false);
     setTimeout(() => {
-      addFile(file.id, type);
-      updateFile(file.id, { isExpanded: true });
+      onRename();
     }, 0);
   };
 
-  const canAddFileType = (type: FileType): boolean => {
-    if (!file.children) return true;
-
-    if (!checkApiRestrictions(file, type)) {
-      return false;
-    }
-
-    if (!checkPageRestrictions(file, type)) {
-      return false;
-    }
-    return true;
+  const handleEditStyles = () => {
+    handleOpenChange(false);
+    setTimeout(() => {
+      onEditStyles();
+    }, 0);
   };
 
-  // Don't show rename option for dynamic folders
-  const canShowRename = file.isRenameable !== false && !file.isDynamic;
+  const handleDelete = () => {
+    handleOpenChange(false);
+    setTimeout(() => {
+      deleteFile(file.id);
+    }, 0);
+  };
 
   return (
     <DropdownMenu open={isDropdownOpen} onOpenChange={handleOpenChange}>
@@ -82,89 +66,17 @@ export function FileMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {isDirectory &&
-          [
-            {
-              label: "New Folder",
-              value: FileTypes.directory,
-              icon: <FolderPlus size={16} />,
-            },
-            {
-              label: "Add Page",
-              value: FileTypes.page,
-              icon: <FilePlus size={16} />,
-            },
-            {
-              label: "Add Layout",
-              value: FileTypes.layout,
-              icon: <FilePlus size={16} />,
-            },
-            {
-              label: "Add Route File",
-              value: FileTypes.route,
-              icon: <FilePlus size={16} />,
-            },
-          ].map(
-            ({ label, value, icon }) =>
-              canAddFileType(value) && (
-                <DropdownMenuItem
-                  key={value}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddFile(value);
-                  }}
-                >
-                  {icon} {label}
-                </DropdownMenuItem>
-              )
-          )}
-
-        {isDirectory && (
-          <DynamicRouteMenu
-            file={file}
-            onUpdateFile={(updates) => {
-              handleOpenChange(false);
-              setTimeout(() => {
-                updateFile(file.id, updates);
-              }, 0);
-            }}
-            setIsDropdownOpen={setIsDropdownOpen}
-          />
-        )}
-        {file.type === FileTypes.layout && (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenChange(false);
-              setTimeout(() => {
-                onEditStyles();
-              }, 0);
-            }}
-          >
-            <Settings size={16} /> Edit Styles
-          </DropdownMenuItem>
-        )}
-        {canShowRename && (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenChange(false);
-              setTimeout(() => {
-                onRename();
-              }, 0);
-            }}
-          >
-            <Edit2 size={16} /> Rename
-          </DropdownMenuItem>
-        )}
+        <FileMenuDirectory
+          file={file}
+          onRename={handleRename}
+          onClose={() => handleOpenChange(false)}
+        />
+        <FileMenuFile file={file} onEditStyles={handleEditStyles} />
         {file.isDeletable !== false && (
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              handleOpenChange(false);
-              setTimeout(() => {
-                deleteFile(file.id);
-              }, 0);
+              handleDelete();
             }}
             className="text-red-500"
           >

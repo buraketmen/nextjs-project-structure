@@ -5,7 +5,7 @@ import { ChevronRight, File, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileTypes, ProjectFile } from "@/lib/types";
+import { FileTypes, ProjectFile, RouteTypes } from "@/types/project";
 import { FileMenu } from "./file-menu";
 import { StyleDialog } from "./style-dialog";
 import { RenameDialog } from "./rename-dialog";
@@ -68,9 +68,27 @@ export function FileNode({ file, level }: FileNodeProps) {
         )}
         <Icon
           size={16}
-          className={cn("flex-shrink-0", file.isDynamic && "text-blue-500")}
+          className={cn("flex-shrink-0", {
+            "text-blue-500": file.routeType === RouteTypes.group,
+            "text-violet-500":
+              file.routeType === RouteTypes.dynamic ||
+              file.routeType === RouteTypes.catchAll ||
+              file.routeType === RouteTypes.optionalCatchAll,
+            "text-red-500": file.routeType === RouteTypes.private,
+          })}
         />
-        <span className="truncate">{file.name}</span>
+        <span
+          className={cn("truncate", {
+            "text-blue-500": file.routeType === RouteTypes.group,
+            "text-violet-500":
+              file.routeType === RouteTypes.dynamic ||
+              file.routeType === RouteTypes.catchAll ||
+              file.routeType === RouteTypes.optionalCatchAll,
+            "text-red-500": file.routeType === RouteTypes.private,
+          })}
+        >
+          {file.name}
+        </span>
 
         {file.isEditable && (
           <div className="ml-auto" onClick={(e) => e.stopPropagation()}>

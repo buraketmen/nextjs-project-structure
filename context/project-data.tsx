@@ -1,4 +1,9 @@
-import { AssignedFileNames, FileTypes, ProjectFile } from "@/lib/types";
+import {
+  AssignedFileNames,
+  FileTypes,
+  ProjectFile,
+  RouteTypes,
+} from "@/types/project";
 import { v4 as uuidv4 } from "uuid";
 
 export const initialStructure: ProjectFile[] = [
@@ -11,6 +16,7 @@ export const initialStructure: ProjectFile[] = [
     isEditable: false,
     isRenameable: false,
     isDeletable: false,
+    routeType: RouteTypes.static,
     children: [
       {
         id: uuidv4(),
@@ -18,9 +24,10 @@ export const initialStructure: ProjectFile[] = [
         type: FileTypes.directory,
         endpoint: "/",
         isExpanded: true,
-        isEditable: false,
+        isEditable: true,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
         children: [
           {
             id: uuidv4(),
@@ -31,6 +38,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: true,
             isRenameable: true,
             isDeletable: true,
+            routeType: RouteTypes.static,
             children: [
               {
                 id: uuidv4(),
@@ -40,6 +48,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: true,
                 isRenameable: false,
                 isDeletable: true,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -50,6 +59,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: true,
                 isRenameable: true,
                 isDeletable: true,
+                routeType: RouteTypes.static,
                 children: [
                   {
                     id: uuidv4(),
@@ -59,6 +69,7 @@ export const initialStructure: ProjectFile[] = [
                     isEditable: true,
                     isRenameable: false,
                     isDeletable: true,
+                    routeType: RouteTypes.static,
                   },
                 ],
               },
@@ -73,6 +84,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: true,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
             children: [
               {
                 id: uuidv4(),
@@ -82,6 +94,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
             ],
           },
@@ -93,6 +106,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
           {
             id: uuidv4(),
@@ -102,6 +116,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
         ],
       },
@@ -113,6 +128,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
         children: [
           {
             id: uuidv4(),
@@ -123,6 +139,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
             children: [
               {
                 id: uuidv4(),
@@ -132,6 +149,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -141,6 +159,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -150,6 +169,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -159,6 +179,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -168,6 +189,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -177,6 +199,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
               {
                 id: uuidv4(),
@@ -186,6 +209,7 @@ export const initialStructure: ProjectFile[] = [
                 isEditable: false,
                 isRenameable: false,
                 isDeletable: false,
+                routeType: RouteTypes.static,
               },
             ],
           },
@@ -198,6 +222,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
           {
             id: uuidv4(),
@@ -208,6 +233,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
           {
             id: uuidv4(),
@@ -218,6 +244,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
         ],
       },
@@ -229,6 +256,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
         children: [
           {
             id: uuidv4(),
@@ -238,6 +266,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
         ],
       },
@@ -252,6 +281,7 @@ export const initialStructure: ProjectFile[] = [
     isEditable: false,
     isRenameable: false,
     isDeletable: false,
+    routeType: RouteTypes.static,
     children: [
       {
         id: uuidv4(),
@@ -262,6 +292,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
         children: [
           {
             id: uuidv4(),
@@ -271,6 +302,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
           {
             id: uuidv4(),
@@ -280,6 +312,7 @@ export const initialStructure: ProjectFile[] = [
             isEditable: false,
             isRenameable: false,
             isDeletable: false,
+            routeType: RouteTypes.static,
           },
         ],
       },
@@ -291,6 +324,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
       },
       {
         id: uuidv4(),
@@ -300,6 +334,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
       },
       {
         id: uuidv4(),
@@ -309,6 +344,7 @@ export const initialStructure: ProjectFile[] = [
         isEditable: false,
         isRenameable: false,
         isDeletable: false,
+        routeType: RouteTypes.static,
       },
     ],
   },

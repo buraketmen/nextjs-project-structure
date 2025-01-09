@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjectFile } from "@/lib/types";
+import { ProjectFile } from "@/types/project";
 import {
   Dialog,
   DialogContent,

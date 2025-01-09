@@ -1,10 +1,21 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ProjectFile } from "@/lib/types";
+import {
+  AssignedFileNames,
+  FileType,
+  ProjectFile,
+  RouteType,
+  RouteTypes,
+} from "@/types/project";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const clearFolderName = (name: string): string => {
+  // Remove (, ), [, ], [[, ]], @, ., .., ...
+  return name.replace(/[()\[\]{}@._]/g, "");
+};
 
 export const findParentFile = (
   files: ProjectFile[],
@@ -51,16 +62,16 @@ export const findFileById = (
 export const updateStructure = (
   files: ProjectFile[],
   id: string,
-  updates: Partial<ProjectFile>
+  newFile: ProjectFile
 ): ProjectFile[] => {
   return files.map((file) => {
     if (file.id === id) {
-      return { ...file, ...updates };
+      return { ...file, ...newFile };
     }
     if (file.children) {
       return {
         ...file,
-        children: updateStructure(file.children, id, updates),
+        children: updateStructure(file.children, id, newFile),
       };
     }
     return file;
@@ -80,6 +91,17 @@ export const deleteFromStructure = (
   });
 };
 
+export const hasApiRoute = (
+  currentFile: ProjectFile | null | undefined,
+  fileStructure: ProjectFile[]
+): boolean => {
+  if (!currentFile) return false;
+  if (currentFile.name === AssignedFileNames.api) return true;
+  const nParent = findParentFile(fileStructure, currentFile);
+  if (!nParent) return false;
+  return hasApiRoute(nParent, fileStructure);
+};
+
 export const replaceDynamicRoutePatterns = (path: string): string => {
   const DYNAMIC_ROUTE_PATTERNS = {
     optionalCatchAll: /\[\[\.\.\.(\w+)\]\]/g,
@@ -90,4 +112,81 @@ export const replaceDynamicRoutePatterns = (path: string): string => {
     .replace(DYNAMIC_ROUTE_PATTERNS.optionalCatchAll, ":$1?*")
     .replace(DYNAMIC_ROUTE_PATTERNS.catchAll, ":$1*")
     .replace(DYNAMIC_ROUTE_PATTERNS.dynamic, ":$1");
+};
+
+export const hasFilesInDirectory = (
+  directory: ProjectFile | null | undefined,
+  fileType: FileType
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+
+  return directory.children.some((file) => file.type === fileType);
+};
+
+export const hasFilesInAllLevels = (
+  directory: ProjectFile | null | undefined,
+  fileType: FileType,
+  checkCurrentLevel: boolean = false
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+
+  if (checkCurrentLevel && hasFilesInDirectory(directory, fileType)) {
+    return true;
+  }
+
+  return directory.children.some((file) =>
+    file.children ? hasFilesInAllLevels(file, fileType, true) : false
+  );
+};
+
+export const hasAnyDynamicRouterInAllLevels = (
+  directory: ProjectFile | null | undefined,
+  checkCurrentLevel: boolean = false
+): boolean => {
+  return hasRouterFileInAllLevels(
+    directory,
+    RouteTypes.dynamic,
+    checkCurrentLevel
+  ) ||
+    hasRouterFileInAllLevels(
+      directory,
+      RouteTypes.catchAll,
+      checkCurrentLevel
+    ) ||
+    hasRouterFileInAllLevels(
+      directory,
+      RouteTypes.optionalCatchAll,
+      checkCurrentLevel
+    )
+    ? true
+    : false;
+};
+
+export const hasRouterFileInDirectory = (
+  directory: ProjectFile | null | undefined,
+  routeType: RouteType,
+  exceptFileId: string | null | undefined = null
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+  return directory.children.some((file) => {
+    if (file.id === exceptFileId) return false;
+    return file.routeType === routeType;
+  });
+};
+
+export const hasRouterFileInAllLevels = (
+  directory: ProjectFile | null | undefined,
+  routeType: RouteType,
+  checkCurrentLevel: boolean = false
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+  if (checkCurrentLevel && hasRouterFileInDirectory(directory, routeType))
+    return true;
+  return directory.children.some((file) =>
+    file.children ? hasRouterFileInAllLevels(file, routeType, true) : false
+  );
 };
