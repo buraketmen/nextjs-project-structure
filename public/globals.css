@@ -13,6 +13,11 @@ body {
   padding: 0;
 }
 
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

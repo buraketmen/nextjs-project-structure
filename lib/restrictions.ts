@@ -964,7 +964,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
       },
 
       canUpdate: (props: InputProps): OutputProps => {
-        return { allowed: false, message: "Layout files cannot be renamed" };
+        return { allowed: true, asset: { file: { ...props.updates } } };
       },
 
       canDelete: (props: InputProps): OutputProps => {
