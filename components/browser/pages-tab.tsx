@@ -60,13 +60,12 @@ export function PagesTab() {
 
     return (
       <div
-        className={cn(
-          "rounded-lg relative outline outline-1 outline-foreground/20",
-          {
-            "bg-accent": !layout?.customStyles,
-            "p-4": isContent && index === layouts.length - 1,
-          }
-        )}
+        className={cn("rounded-lg relative ", {
+          "bg-accent": !layout?.customStyles,
+          "p-4": isContent && index === layouts.length - 1,
+          "outline outline-1 outline-foreground/20":
+            index !== layouts.length - 1,
+        })}
         style={
           layout?.customStyles
             ? {
