@@ -8,32 +8,16 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useEffect, useState, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
+import {
+  OrientationProvider,
+  useOrientation,
+} from "@/context/orientation-context";
 
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+function HomeContent() {
+  const { orientation, isHorizontal } = useOrientation();
 
-export default function Home() {
-  const [orientation, setOrientation] = useState<
-    "horizontal" | "vertical" | null
-  >(null);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  useIsomorphicLayoutEffect(() => {
-    setOrientation(window.innerWidth >= 768 ? "horizontal" : "vertical");
-  }, []);
-
-  useEffect(() => {
-    if (orientation !== null) {
-      setOrientation(isDesktop ? "horizontal" : "vertical");
-    }
-  }, [isDesktop, orientation]);
-
-  if (orientation === null) {
-    return null;
-  }
+  if (!orientation) return null;
 
   return (
     <main className="flex min-h-screen">
@@ -42,34 +26,46 @@ export default function Home() {
         className="min-h-screen w-full"
       >
         <ResizablePanel
-          defaultSize={orientation === "horizontal" ? 25 : 40}
-          minSize={orientation === "horizontal" ? 20 : 30}
-          maxSize={orientation === "horizontal" ? 50 : 80}
+          defaultSize={isHorizontal ? 25 : 50}
+          minSize={isHorizontal ? 20 : 30}
+          maxSize={isHorizontal ? 50 : 80}
           className={
-            orientation === "horizontal" ? "min-w-[250px]" : "min-h-[200px]"
+            isHorizontal ? "min-w-[250px] max-h-[100dvh]" : "min-h-[200px]"
           }
         >
-          <div
-            className={cn(
-              "h-full p-4",
-              orientation === "horizontal" ? "border-r" : "border-b",
-              "dark:border-gray-800"
-            )}
-          >
-            <div className="flex justify-between items-center mb-4 border-b-2 pb-4">
+          <div className={cn("flex flex-col h-full p-4")}>
+            <div className="flex justify-between items-center mb-2 border-b-2 pb-2">
               <h1 className="text-xl font-bold truncate">Next.js Structure</h1>
               <ThemeToggle />
             </div>
-            <ProjectStructure />
+            <h2 className="text-md font-semibold mb-2 text-muted-foreground/50">
+              Project Structure
+            </h2>
+            <div className={cn("flex-1 overflow-y-auto")}>
+              <ProjectStructure />
+            </div>
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={orientation === "horizontal" ? 75 : 60}>
-          <div className="h-full p-4">
+        <ResizablePanel defaultSize={isHorizontal ? 75 : 50}>
+          <div
+            className={cn(
+              "p-4 overflow-y-auto",
+              isHorizontal ? "h-[100dvh]" : "h-full"
+            )}
+          >
             <BrowserView />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <OrientationProvider>
+      <HomeContent />
+    </OrientationProvider>
   );
 }

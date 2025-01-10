@@ -1,12 +1,17 @@
-import { StructureContent } from "./structure-content";
+"use client";
 
-function ProjectStructure() {
+import { useProject } from "@/context/project-context";
+import { FileNode } from "./file-node";
+
+function StructureContent() {
+  const { projectStructure } = useProject();
+
   return (
-    <div className="h-full overflow-auto">
-      <h2 className="text-lg font-semibold mb-4">Project Structure</h2>
-
-      <StructureContent />
+    <div className="space-y-1 px-1">
+      {projectStructure.map((file) => (
+        <FileNode key={file.id} file={file} level={0} />
+      ))}
     </div>
   );
 }
-export default ProjectStructure;
+export default StructureContent;
