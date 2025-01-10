@@ -33,7 +33,7 @@ function HomeContent() {
             isHorizontal ? "min-w-[250px] max-h-[100dvh]" : "min-h-[200px]"
           }
         >
-          <div className={cn("flex flex-col h-full p-4")}>
+          <div className={cn("flex flex-col h-full p-2")}>
             <div className="flex justify-between items-center mb-2 border-b-2 pb-2">
               <h1 className="text-xl font-bold truncate">Next.js Structure</h1>
               <ThemeToggle />
@@ -50,7 +50,7 @@ function HomeContent() {
         <ResizablePanel defaultSize={isHorizontal ? 75 : 50}>
           <div
             className={cn(
-              "p-4 overflow-y-auto",
+              "px-4 py-2 overflow-y-auto",
               isHorizontal ? "h-[100dvh]" : "h-full"
             )}
           >

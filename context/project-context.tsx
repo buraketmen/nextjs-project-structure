@@ -101,6 +101,7 @@ interface ProjectContextType {
   deleteFile: (fileId: string) => void;
   hasApiParent: (file: ProjectFile | null, checkItself: boolean) => boolean;
   getLayoutFile: (file: ProjectFile | null) => ProjectFile | null;
+  getPageFile: (file: ProjectFile | null) => ProjectFile | null;
   showInDropdown: (
     parent: ProjectFile | null,
     type: FileType | null,
@@ -150,6 +151,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return (
       parent.children.find(
         (child: ProjectFile) => child.type === FileTypes.layout
+      ) || null
+    );
+  };
+
+  const getPageFile = (file: ProjectFile | null) => {
+    if (!file) return null;
+    const parent = findParentFile(projectStructure, file);
+    if (!parent?.children) return null;
+    return (
+      parent.children.find(
+        (child: ProjectFile) => child.type === FileTypes.page
       ) || null
     );
   };
@@ -372,6 +384,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         deleteFile,
         hasApiParent,
         getLayoutFile,
+        getPageFile,
         showInDropdown,
       }}
     >
