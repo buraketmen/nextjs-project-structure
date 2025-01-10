@@ -68,7 +68,6 @@ export function RenameDialog({
 
   const handleSave = () => {
     if (!validateName(newName)) {
-      console.log("error");
       return;
     }
 

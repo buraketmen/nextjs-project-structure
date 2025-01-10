@@ -149,7 +149,7 @@ export const hasSelectedRoutersInAllLevels = (
     if (file.children) {
       return hasSelectedRoutersInAllLevels(file, routers, true);
     }
-    return true;
+    return false;
   });
 };
 
@@ -184,6 +184,6 @@ export const hasSelectedFilesInAllLevels = (
     if (file.children) {
       return hasSelectedFilesInAllLevels(file, fileTypes, true);
     }
-    return true;
+    return false;
   });
 };
