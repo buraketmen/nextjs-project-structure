@@ -2,7 +2,7 @@
 
 An interactive web application that helps visualize and understand Next.js project structures. This tool allows you to explore and manipulate Next.js app directory structures with a visual interface.
 
-![Project Structure Playground](./public/screenshot.png)
+![Project Structure Playground](./public/images/screenshot.png)
 
 ## Features
 
