@@ -79,8 +79,9 @@ export function PagesTab() {
       <div
         className={cn("rounded-lg relative p-2", {
           "bg-accent": !layout?.customStyles,
-          "outline outline-1 outline-border": showOutline,
-          "shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.06)]": showShadow,
+          "outline outline-1 outline-border dark:outline-white/20": showOutline,
+          "shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.10)] dark:shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.10)]":
+            showShadow,
         })}
         style={{
           paddingTop: isLastLayout ? 0 : "15px",
