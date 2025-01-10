@@ -718,7 +718,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
               hasSelectedFilesInAllLevels(
                 props.file,
                 [FileTypes.directory],
-                true
+                false
               )
             ) {
               return {
@@ -758,7 +758,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
               hasSelectedFilesInAllLevels(
                 props.file,
                 [FileTypes.directory],
-                true
+                false
               )
             ) {
               return {
