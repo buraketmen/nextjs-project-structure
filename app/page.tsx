@@ -20,18 +20,15 @@ function HomeContent() {
   if (!orientation) return null;
 
   return (
-    <main className="flex min-h-[100dvh]">
-      <ResizablePanelGroup
-        direction={orientation}
-        className="min-h-screen w-full"
-      >
+    <main className="flex h-[100svh] overflow-hidden">
+      <ResizablePanelGroup direction={orientation} className="h-full w-full">
         <ResizablePanel
           defaultSize={isHorizontal ? 25 : 50}
           minSize={isHorizontal ? 20 : 30}
           maxSize={isHorizontal ? 50 : 80}
           className={cn(
-            "max-h-[100dvh]",
-            isHorizontal ? "min-w-[250px]" : "min-h-[200px]"
+            "h-full",
+            isHorizontal ? "min-w-[250px]" : "min-h-[150px]"
           )}
         >
           <div className="flex flex-col h-full">
@@ -44,16 +41,13 @@ function HomeContent() {
             <h2 className="hidden md:block text-[14px] md:text-md font-semibold mb-1 md:mb-2 px-1 md:px-2 text-muted-foreground/50">
               Project Structure
             </h2>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-1 md:px-2">
               <ProjectStructure />
             </div>
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel
-          defaultSize={isHorizontal ? 75 : 50}
-          className="h-[100dvh]"
-        >
+        <ResizablePanel defaultSize={isHorizontal ? 75 : 50} className="h-full">
           <div className="h-full w-full overflow-y-auto">
             <div
               className={cn("h-full", {
