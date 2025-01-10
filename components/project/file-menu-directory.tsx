@@ -4,7 +4,6 @@ import {
   FileTypes,
   RouteTypes,
   RouteTypeFolderNames,
-  AssignedFileNames,
 } from "@/types/project";
 import {
   DropdownMenuItem,

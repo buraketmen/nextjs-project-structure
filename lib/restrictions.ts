@@ -11,10 +11,10 @@ import {
   clearFolderName,
   findParentFile,
   hasApiRoute,
-  hasFilesInDirectory,
-  hasFilesInAllLevels,
-  hasAnyDynamicRouterInAllLevels,
-  hasRouterFileInDirectory,
+  hasSelectedRoutersInAllLevels,
+  hasSelectedFilesInAllLevels,
+  hasSelectedRoutersInDirectory,
+  hasSelectedFilesInDirectory,
 } from "@/lib/utils";
 
 interface InputProps {
@@ -49,22 +49,6 @@ interface FileRestrictions {
   canDelete: (props: InputProps) => OutputProps;
 }
 
-// Helper functions
-const hasRouteConflict = (
-  files: ProjectFile[],
-  file: ProjectFile,
-  targetEndpoint: string | null
-): boolean => {
-  if (!targetEndpoint) return false;
-
-  for (const f of files) {
-    if (f.id !== file.id && f.endpoint === targetEndpoint) return true;
-    if (f.children && hasRouteConflict(f.children, file, targetEndpoint))
-      return true;
-  }
-  return false;
-};
-
 const hasPrivateRoute = (
   file: ProjectFile,
   fileStructure: ProjectFile[]
@@ -73,50 +57,6 @@ const hasPrivateRoute = (
   const parent = findParentFile(fileStructure, file);
   if (!parent) return false;
   return hasPrivateRoute(parent, fileStructure);
-};
-
-const hasDynamicRoute = (
-  parent: ProjectFile | null | undefined,
-  fileId: string
-): boolean => {
-  if (!parent) return false;
-  return (
-    parent.children?.some(
-      (child) =>
-        child.id !== fileId &&
-        (child.routeType === RouteTypes.dynamic ||
-          child.routeType === RouteTypes.catchAll ||
-          child.routeType === RouteTypes.optionalCatchAll)
-    ) || false
-  );
-};
-
-const hasCatchAllSibling = (
-  parent: ProjectFile | null | undefined
-): boolean => {
-  if (!parent) return false;
-  return (
-    parent.children?.some(
-      (child) =>
-        child.routeType === RouteTypes.catchAll ||
-        child.routeType === RouteTypes.optionalCatchAll
-    ) || false
-  );
-};
-
-const hasParentCatchAll = (
-  currentFile: ProjectFile,
-  fileStructure: ProjectFile[]
-): boolean => {
-  if (
-    currentFile.routeType === RouteTypes.catchAll ||
-    currentFile.routeType === RouteTypes.optionalCatchAll
-  ) {
-    return true;
-  }
-  const parentFile = findParentFile(fileStructure, currentFile);
-  if (!parentFile) return false;
-  return hasParentCatchAll(parentFile, fileStructure);
 };
 
 const getNewFolderName = (
@@ -180,15 +120,15 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return true;
         }
       },
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         // Already checked for all the restrictions in the showInDropdown function
         // No need to manupilate the file or fileStructure
         return { allowed: true };
       },
-      canUpdate: (props: InputProps): OutputProps => {
+      canUpdate: (): OutputProps => {
         return { allowed: false, message: "Route files cannot be renamed" };
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return { allowed: true };
       },
     },
@@ -319,23 +259,17 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
               asset: { file: { ...props.updates, name: newName } },
             };
           case RouteTypes.dynamic: {
-            if (hasRouterFileInDirectory(props.parent, RouteTypes.catchAll)) {
-              return {
-                allowed: false,
-                message:
-                  "You can not use dynamic router when folder has a catch-all router.",
-              };
-            }
             if (
-              hasRouterFileInDirectory(
+              hasSelectedRoutersInDirectory(
                 props.parent,
-                RouteTypes.optionalCatchAll
+                [RouteTypes.catchAll, RouteTypes.optionalCatchAll],
+                props.file.id
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use dynamic router when folder has an optional catch-all router.",
+                  "You can not use dynamic router when folder has a catch-all or optional catch-all router.",
               };
             }
             return {
@@ -346,11 +280,17 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
           }
           case RouteTypes.group: {
-            if (hasFilesInDirectory(props.file, FileTypes.route)) {
+            if (
+              hasSelectedFilesInDirectory(
+                props.parent,
+                [FileTypes.route],
+                props.file.id
+              )
+            ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use group router when folder has a Route file.",
+                  "You can not use group router when folder has a Route file. They will be ignored.",
               };
             }
 
@@ -362,18 +302,30 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
           }
           case RouteTypes.private: {
-            if (hasFilesInAllLevels(props.parent, FileTypes.route, false)) {
-              return {
-                allowed: false,
-                message:
-                  "You can not use private router when folder or any sub-folder has a Route file.",
-              };
-            }
-            if (hasAnyDynamicRouterInAllLevels(props.parent, true)) {
+            if (
+              hasSelectedRoutersInAllLevels(
+                props.file,
+                [
+                  RouteTypes.dynamic,
+                  RouteTypes.catchAll,
+                  RouteTypes.optionalCatchAll,
+                ],
+                true
+              )
+            ) {
               return {
                 allowed: false,
                 message:
                   "You can not use private router when folder or any sub-folder has a dynamic including catch-all or optional catch-all router.",
+              };
+            }
+            if (
+              hasSelectedFilesInAllLevels(props.file, [FileTypes.route], true)
+            ) {
+              return {
+                allowed: false,
+                message:
+                  "You can not use private router when folder or any sub-folder has a Route file. They will be ignored.",
               };
             }
 
@@ -404,28 +356,28 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
         }
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return { allowed: true };
       },
     },
     page: {
-      showInDropdown: (props: ShowInDropdownProps): boolean => {
+      showInDropdown: (): boolean => {
         return false;
       },
 
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         return {
           allowed: false,
           message: "Pages are not allowed in the API directory",
         };
       },
-      canUpdate: (props: InputProps): OutputProps => {
+      canUpdate: (): OutputProps => {
         return {
           allowed: false,
           message: "Pages are not allowed in the API directory",
         };
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return {
           allowed: false,
           message: "Pages are not allowed in the API directory",
@@ -433,23 +385,23 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
       },
     },
     layout: {
-      showInDropdown: (props: ShowInDropdownProps): boolean => {
+      showInDropdown: (): boolean => {
         return false;
       },
 
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         return {
           allowed: false,
           message: "Layouts are not allowed in the API directory",
         };
       },
-      canUpdate: (props: InputProps): OutputProps => {
+      canUpdate: (): OutputProps => {
         return {
           allowed: false,
           message: "Layouts are not allowed in the API directory",
         };
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return {
           allowed: false,
           message: "Layouts are not allowed in the API directory",
@@ -459,22 +411,22 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
   },
   app: {
     route: {
-      showInDropdown: (props: ShowInDropdownProps): boolean => {
+      showInDropdown: (): boolean => {
         return false;
       },
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         return {
           allowed: false,
           message: "Route files are not allowed outside the API directory",
         };
       },
-      canUpdate: (props: InputProps): OutputProps => {
+      canUpdate: (): OutputProps => {
         return {
           allowed: false,
           message: "Route files are not allowed outside the API directory",
         };
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return {
           allowed: false,
           message: "Route files are not allowed outside the API directory",
@@ -551,7 +503,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
               case RouteTypes.static:
                 return true;
               case RouteTypes.private:
-                return true;
+                return false;
               default:
                 return !isUnderPrivateRoute;
             }
@@ -661,29 +613,16 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
           case RouteTypes.dynamic: {
             if (
-              hasRouterFileInDirectory(
+              hasSelectedRoutersInDirectory(
                 props.parent,
-                RouteTypes.catchAll,
+                [RouteTypes.catchAll, RouteTypes.optionalCatchAll],
                 props.file.id
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use dynamic router when folder has a catch-all router.",
-              };
-            }
-            if (
-              hasRouterFileInDirectory(
-                props.parent,
-                RouteTypes.optionalCatchAll,
-                props.file.id
-              )
-            ) {
-              return {
-                allowed: false,
-                message:
-                  "You can not use dynamic router when folder has an optional catch-all router.",
+                  "You can not use dynamic router when folder has a catch-all or optional catch-all router.",
               };
             }
             return {
@@ -694,7 +633,9 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
           }
           case RouteTypes.group: {
-            if (hasFilesInDirectory(props.file, FileTypes.page)) {
+            if (
+              hasSelectedFilesInDirectory(props.file, [FileTypes.page], null)
+            ) {
               return {
                 allowed: false,
                 message:
@@ -710,26 +651,40 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
           }
           case RouteTypes.private: {
-            if (hasFilesInAllLevels(props.parent, FileTypes.page, false)) {
+            if (
+              hasSelectedFilesInAllLevels(
+                props.file,
+                [FileTypes.page, FileTypes.layout],
+                false
+              )
+            ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use private router when folder or any sub-folder has a Page file.",
-              };
-            }
-            if (hasFilesInAllLevels(props.parent, FileTypes.layout, false)) {
-              return {
-                allowed: false,
-                message:
-                  "You can not use private router when folder or any sub-folder has a Layout file.",
+                  "You can not use private folder when folder or any sub-folder has a Page or Layout file.",
               };
             }
 
-            if (hasAnyDynamicRouterInAllLevels(props.parent, true)) {
+            if (
+              hasSelectedRoutersInAllLevels(
+                props.file,
+                [
+                  RouteTypes.group,
+                  RouteTypes.dynamic,
+                  RouteTypes.catchAll,
+                  RouteTypes.optionalCatchAll,
+                  RouteTypes.parallel,
+                  RouteTypes.interceptedSameLevel,
+                  RouteTypes.interceptedOneLevelAbove,
+                  RouteTypes.interceptedTwoLevelsAbove,
+                ],
+                false
+              )
+            ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use private router when folder or any sub-folder has a dynamic including catch-all or optional catch-all router.",
+                  "Private folders are not be considered by the routing system. Private, static folders and non-routing files are the only allowed in private folders.",
               };
             }
 
@@ -742,29 +697,34 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           }
           case RouteTypes.catchAll: {
             if (
-              hasRouterFileInDirectory(
+              hasSelectedRoutersInDirectory(
                 props.parent,
-                RouteTypes.optionalCatchAll,
+                [
+                  RouteTypes.dynamic,
+                  RouteTypes.catchAll,
+                  RouteTypes.optionalCatchAll,
+                ],
                 props.file.id
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use catch-all router when folder has an optional catch-all router",
+                  "You can not use catch-all router when folder has a dynamic routers including optional catch-all",
               };
             }
+
             if (
-              hasRouterFileInDirectory(
-                props.parent,
-                RouteTypes.dynamic,
-                props.file.id
+              hasSelectedFilesInAllLevels(
+                props.file,
+                [FileTypes.directory],
+                true
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use catch-all router when folder has a dynamic router",
+                  "You can not use catch-all router when folder or any sub-folder has a directory. They will be ignored.",
               };
             }
 
@@ -777,29 +737,34 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           }
           case RouteTypes.optionalCatchAll: {
             if (
-              hasRouterFileInDirectory(
+              hasSelectedRoutersInDirectory(
                 props.parent,
-                RouteTypes.catchAll,
+                [
+                  RouteTypes.dynamic,
+                  RouteTypes.catchAll,
+                  RouteTypes.optionalCatchAll,
+                ],
                 props.file.id
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use optional catch-all router when folder has a catch-all router",
+                  "You can not use optional catch-all router when folder has a dynamic routers including catch-all",
               };
             }
+
             if (
-              hasRouterFileInDirectory(
-                props.parent,
-                RouteTypes.dynamic,
-                props.file.id
+              hasSelectedFilesInAllLevels(
+                props.file,
+                [FileTypes.directory],
+                true
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You can not use optional catch-all router when folder has a dynamic router",
+                  "You can not use optional catch-all router when folder or any sub-folder has a directory. They will be ignored.",
               };
             }
 
@@ -814,17 +779,27 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             // Restrictions:
             // 1. All folders have to be parallel, everything else is not allowed
             // TODO: Implement
+
             if (
-              hasRouterFileInDirectory(
+              hasSelectedRoutersInDirectory(
                 props.parent,
-                RouteTypes.static,
-                props.file.id
+                [
+                  RouteTypes.static,
+                  RouteTypes.group,
+                  RouteTypes.dynamic,
+                  RouteTypes.catchAll,
+                  RouteTypes.optionalCatchAll,
+                  RouteTypes.interceptedSameLevel,
+                  RouteTypes.interceptedOneLevelAbove,
+                  RouteTypes.interceptedTwoLevelsAbove,
+                ],
+                null
               )
             ) {
               return {
                 allowed: false,
                 message:
-                  "You cannot have separate static and dynamic slots at the same route segment level. ",
+                  "You cannot have separate static or dynamic slots at the same route segment level. All the folders have to be parallel.",
               };
             }
             return {
@@ -869,7 +844,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             };
         }
       },
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return { allowed: true };
       },
     },
@@ -908,17 +883,17 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         }
       },
 
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         // Already checked for all the restrictions in the showInDropdown function
         // No need to manupilate the file or fileStructure
         return { allowed: true };
       },
 
-      canUpdate: (props: InputProps): OutputProps => {
+      canUpdate: (): OutputProps => {
         return { allowed: false, message: "Page files cannot be renamed" };
       },
 
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return { allowed: true };
       },
     },
@@ -957,7 +932,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         }
       },
 
-      canAdd: (props: InputProps): OutputProps => {
+      canAdd: (): OutputProps => {
         // Already checked for all the restrictions in the showInDropdown function
         // No need to manupilate the file or fileStructure
         return { allowed: true };
@@ -967,7 +942,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         return { allowed: true, asset: { file: { ...props.updates } } };
       },
 
-      canDelete: (props: InputProps): OutputProps => {
+      canDelete: (): OutputProps => {
         return { allowed: true };
       },
     },

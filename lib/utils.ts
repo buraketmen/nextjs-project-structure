@@ -5,7 +5,6 @@ import {
   FileType,
   ProjectFile,
   RouteType,
-  RouteTypes,
 } from "@/types/project";
 
 export function cn(...inputs: ClassValue[]) {
@@ -114,79 +113,77 @@ export const replaceDynamicRoutePatterns = (path: string): string => {
     .replace(DYNAMIC_ROUTE_PATTERNS.dynamic, ":$1");
 };
 
-export const hasFilesInDirectory = (
+export const hasSelectedRoutersInDirectory = (
   directory: ProjectFile | null | undefined,
-  fileType: FileType
-): boolean => {
-  if (!directory) return false;
-  if (!directory.children) return false;
-
-  return directory.children.some((file) => file.type === fileType);
-};
-
-export const hasFilesInAllLevels = (
-  directory: ProjectFile | null | undefined,
-  fileType: FileType,
-  checkCurrentLevel: boolean = false
-): boolean => {
-  if (!directory) return false;
-  if (!directory.children) return false;
-
-  if (checkCurrentLevel && hasFilesInDirectory(directory, fileType)) {
-    return true;
-  }
-
-  return directory.children.some((file) =>
-    file.children ? hasFilesInAllLevels(file, fileType, true) : false
-  );
-};
-
-export const hasAnyDynamicRouterInAllLevels = (
-  directory: ProjectFile | null | undefined,
-  checkCurrentLevel: boolean = false
-): boolean => {
-  return hasRouterFileInAllLevels(
-    directory,
-    RouteTypes.dynamic,
-    checkCurrentLevel
-  ) ||
-    hasRouterFileInAllLevels(
-      directory,
-      RouteTypes.catchAll,
-      checkCurrentLevel
-    ) ||
-    hasRouterFileInAllLevels(
-      directory,
-      RouteTypes.optionalCatchAll,
-      checkCurrentLevel
-    )
-    ? true
-    : false;
-};
-
-export const hasRouterFileInDirectory = (
-  directory: ProjectFile | null | undefined,
-  routeType: RouteType,
+  routers: RouteType[],
   exceptFileId: string | null | undefined = null
 ): boolean => {
   if (!directory) return false;
   if (!directory.children) return false;
   return directory.children.some((file) => {
     if (file.id === exceptFileId) return false;
-    return file.routeType === routeType;
+    return routers.includes(file.routeType);
   });
 };
 
-export const hasRouterFileInAllLevels = (
+export const hasSelectedRoutersInAllLevels = (
   directory: ProjectFile | null | undefined,
-  routeType: RouteType,
-  checkCurrentLevel: boolean = false
+  routers: RouteType[],
+  checkItself: boolean = false
 ): boolean => {
   if (!directory) return false;
   if (!directory.children) return false;
-  if (checkCurrentLevel && hasRouterFileInDirectory(directory, routeType))
+
+  if (
+    checkItself &&
+    directory.routeType &&
+    routers.includes(directory.routeType)
+  ) {
     return true;
-  return directory.children.some((file) =>
-    file.children ? hasRouterFileInAllLevels(file, routeType, true) : false
-  );
+  }
+
+  return directory.children.some((file) => {
+    if (file.routeType && routers.includes(file.routeType)) {
+      return true;
+    }
+    if (file.children) {
+      return hasSelectedRoutersInAllLevels(file, routers, true);
+    }
+    return true;
+  });
+};
+
+export const hasSelectedFilesInDirectory = (
+  directory: ProjectFile | null | undefined,
+  fileTypes: FileType[],
+  exceptFileId: string | null | undefined = null
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+  return directory.children.some((file) => {
+    if (file.id === exceptFileId) return false;
+    return fileTypes.includes(file.type);
+  });
+};
+
+export const hasSelectedFilesInAllLevels = (
+  directory: ProjectFile | null | undefined,
+  fileTypes: FileType[],
+  checkItself: boolean = false
+): boolean => {
+  if (!directory) return false;
+  if (!directory.children) return false;
+  if (checkItself && directory.type && fileTypes.includes(directory.type)) {
+    return true;
+  }
+
+  return directory.children.some((file) => {
+    if (file.type && fileTypes.includes(file.type)) {
+      return true;
+    }
+    if (file.children) {
+      return hasSelectedFilesInAllLevels(file, fileTypes, true);
+    }
+    return true;
+  });
 };

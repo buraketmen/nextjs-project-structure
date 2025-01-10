@@ -15,7 +15,7 @@ body {
 
 .rtl {
   direction: rtl;
-  text-align: right;
+  text-align: left;
 }
 
 @layer utilities {

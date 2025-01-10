@@ -1,4 +1,4 @@
-import { ProjectFile, FileType, FileTypes, RouteTypes } from "@/types/project";
+import { ProjectFile } from "@/types/project";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Settings, Edit2, Trash } from "lucide-react";
+import { MoreVertical, Trash } from "lucide-react";
 import { useState } from "react";
 import { useProject } from "@/context/project-context";
 import FileMenuDirectory from "./file-menu-directory";

@@ -1,4 +1,8 @@
-import { ProjectFile, AssignedFileNames } from "@/types/project";
+import {
+  ProjectFile,
+  AssignedFileNames,
+  AssignedFileName,
+} from "@/types/project";
 import {
   Dialog,
   DialogContent,
@@ -54,7 +58,7 @@ export function RenameDialog({
       setError("Name can only contain letters.");
       return false;
     }
-    if (Object.values(AssignedFileNames).includes(name as any)) {
+    if (Object.values(AssignedFileNames).includes(name as AssignedFileName)) {
       setError("This name is reserved and cannot be used");
       return false;
     }

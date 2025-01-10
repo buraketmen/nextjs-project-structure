@@ -44,7 +44,7 @@ function BreadcrumbSegment({ text }: { text: string }) {
 
 function PageBreadcrumb() {
   const { currentFile } = useProject();
-  const maxVisibleSegments = 3;
+  const maxVisibleSegments = 2;
 
   const pathSegments = currentFile?.endpoint?.split("/").filter(Boolean) || [];
   const showDropdown = pathSegments.length > maxVisibleSegments;

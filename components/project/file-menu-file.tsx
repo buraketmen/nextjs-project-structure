@@ -1,6 +1,6 @@
 import { ProjectFile, FileTypes } from "@/types/project";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Settings, Trash } from "lucide-react";
+import { Settings } from "lucide-react";
 
 interface FileMenuFileProps {
   file: ProjectFile;

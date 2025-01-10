@@ -44,73 +44,67 @@ export function PagesTab() {
 
   const layouts = findParentLayouts(currentFile);
 
+  const renderContent = () => (
+    <div className="min-h-[200px] h-full flex items-center p-4">
+      {currentFile?.endpoint ? (
+        <div className="max-w-full">
+          <span className="text-sm opacity-80 block truncate rtl">
+            Content for
+          </span>
+          <span className="text-md opacity-100 block truncate rtl">
+            {currentFile.endpoint}
+          </span>
+        </div>
+      ) : (
+        <p>Select a page from the project structure.</p>
+      )}
+    </div>
+  );
+
   const renderNestedLayout = (
     layouts: Array<{ layout: ReturnType<typeof getLayoutFile>; level: number }>,
     index: number,
-    children: React.ReactNode,
-    isContent: boolean = false
+    children: React.ReactNode
   ) => {
     if (index >= layouts.length) {
       return children;
     }
 
-    const { layout, level } = layouts[index];
-    const paddingTop = isContent ? 0 : 40;
-    const layoutPath = layout ? getFullPath(layout, projectStructure) : "";
+    const { layout } = layouts[index];
+    const isLastLayout = index === layouts.length - 1;
+    const fullPath = layout ? getFullPath(layout, projectStructure) : "";
+    const layoutPath = fullPath.replace(/^\//, "").replace(/\/$/, "");
+    const showShadow = index > 0;
+    const showOutline = !isLastLayout || index < layouts.length;
 
     return (
       <div
-        className={cn("rounded-lg relative ", {
+        className={cn("rounded-lg relative p-2", {
           "bg-accent": !layout?.customStyles,
-          "p-4": isContent && index === layouts.length - 1,
-          "outline outline-1 outline-foreground/20":
-            index !== layouts.length - 1,
+          "outline outline-1 outline-border": showOutline,
+          "shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.06)]": showShadow,
         })}
-        style={
-          layout?.customStyles
-            ? {
-                backgroundColor: layout.customStyles.backgroundColor,
-                color: layout.customStyles.textColor,
-                paddingTop: `${paddingTop}px`,
-              }
-            : { paddingTop: `${paddingTop}px` }
-        }
+        style={{
+          paddingTop: isLastLayout ? 0 : "15px",
+          ...(layout?.customStyles && {
+            backgroundColor: layout.customStyles.backgroundColor,
+            color: layout.customStyles.textColor,
+          }),
+        }}
       >
-        {!isContent && (
-          <div className="absolute top-2 right-2 text-xs truncate max-w-[300px] rtl">
+        <div className="relative h-6">
+          <div
+            className={cn(
+              "absolute right-2 top-0 text-xs truncate rtl max-w-[90%] ",
+              { "top-3": isLastLayout }
+            )}
+          >
             {layoutPath}
           </div>
-        )}
-        {renderNestedLayout(layouts, index + 1, children, isContent)}
-      </div>
-    );
-  };
-
-  const renderContent = () => {
-    const content = (
-      <div className="min-h-[100px] h-full flex items-center ">
-        {currentFile?.endpoint ? (
-          <div>
-            <span className="text-sm opacity-80">Content for</span> <br />
-            <span className="text-md opacity-100">{currentFile.endpoint}</span>
-          </div>
-        ) : (
-          <p>Select a page from the project structure.</p>
-        )}
-      </div>
-    );
-
-    if (layouts.length > 0) {
-      return renderNestedLayout(layouts, 0, content, true);
-    }
-
-    return (
-      <div
-        className={cn("p-4 rounded-lg min-h-[250px] bg-accent", {
-          "flex items-center justify-center": !currentFile?.endpoint,
-        })}
-      >
-        {content}
+        </div>
+        {isLastLayout
+          ? renderContent()
+          : renderNestedLayout(layouts, index + 1, children)}
       </div>
     );
   };
@@ -121,9 +115,17 @@ export function PagesTab() {
         <PageBreadcrumb />
       </div>
 
-      {layouts.length > 0
-        ? renderNestedLayout(layouts, 0, renderContent())
-        : renderContent()}
+      {layouts.length > 0 ? (
+        renderNestedLayout(layouts, 0, null)
+      ) : (
+        <div
+          className={cn("p-4 rounded-lg min-h-[250px] bg-accent", {
+            "flex items-center justify-center": !currentFile?.endpoint,
+          })}
+        >
+          {renderContent()}
+        </div>
+      )}
     </div>
   );
 }
