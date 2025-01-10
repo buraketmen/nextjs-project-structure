@@ -20,7 +20,7 @@ function HomeContent() {
   if (!orientation) return null;
 
   return (
-    <main className="flex min-h-screen">
+    <main className="flex min-h-[100dvh]">
       <ResizablePanelGroup
         direction={orientation}
         className="min-h-screen w-full"
@@ -29,32 +29,40 @@ function HomeContent() {
           defaultSize={isHorizontal ? 25 : 50}
           minSize={isHorizontal ? 20 : 30}
           maxSize={isHorizontal ? 50 : 80}
-          className={
-            isHorizontal ? "min-w-[250px] max-h-[100dvh]" : "min-h-[200px]"
-          }
+          className={cn(
+            "max-h-[100dvh]",
+            isHorizontal ? "min-w-[250px]" : "min-h-[200px]"
+          )}
         >
-          <div className={cn("flex flex-col h-full p-2")}>
-            <div className="flex justify-between items-center mb-2 border-b-2 pb-2">
-              <h1 className="text-xl font-bold truncate">Next.js Structure</h1>
+          <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center mb-1 md:mb-2 border-b p-1 md:p-2">
+              <h1 className="text-md md:text-xl font-bold truncate">
+                Next.js Structure
+              </h1>
               <ThemeToggle />
             </div>
-            <h2 className="text-md font-semibold mb-2 text-muted-foreground/50">
+            <h2 className="hidden md:block text-[14px] md:text-md font-semibold mb-1 md:mb-2 px-1 md:px-2 text-muted-foreground/50">
               Project Structure
             </h2>
-            <div className={cn("flex-1 overflow-y-auto")}>
+            <div className="flex-1 overflow-y-auto">
               <ProjectStructure />
             </div>
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={isHorizontal ? 75 : 50}>
-          <div
-            className={cn(
-              "px-4 py-2 overflow-y-auto",
-              isHorizontal ? "h-[100dvh]" : "h-full"
-            )}
-          >
-            <BrowserView />
+        <ResizablePanel
+          defaultSize={isHorizontal ? 75 : 50}
+          className="h-[100dvh]"
+        >
+          <div className="h-full w-full overflow-y-auto">
+            <div
+              className={cn("h-full", {
+                "px-4 py-2": isHorizontal,
+                "px-2 py-2": !isHorizontal,
+              })}
+            >
+              <BrowserView />
+            </div>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
