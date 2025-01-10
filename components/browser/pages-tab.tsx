@@ -45,13 +45,11 @@ export function PagesTab() {
   const layouts = findParentLayouts(currentFile);
 
   const renderContent = () => (
-    <div className="min-h-[200px] h-full flex items-center p-4">
+    <div className="min-h-[200px] h-full flex items-center p-4 w-full">
       {currentFile?.endpoint ? (
         <div className="max-w-full">
-          <span className="text-sm opacity-80 block truncate rtl">
-            Content for
-          </span>
-          <span className="text-md opacity-100 block truncate rtl">
+          <span className="text-sm opacity-80 block truncate">Content for</span>
+          <span className="text-md opacity-100 block truncate">
             {currentFile.endpoint}
           </span>
         </div>
