@@ -48,7 +48,7 @@ export function PagesTab() {
       if (layout) {
         layouts.unshift({ layout, page, level: currentLevel });
       }
-      const parent = findParentFile(projectStructure, currentParent);
+      const parent = findParentFile(currentParent, projectStructure);
       if (!parent) break;
       currentParent = parent;
       currentLevel++;

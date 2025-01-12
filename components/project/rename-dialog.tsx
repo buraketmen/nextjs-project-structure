@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { clearFolderName, cn } from "@/lib/utils";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { clearFolderName, cn, findParentFile } from "@/lib/utils";
+import { useProject } from "@/context/project-context";
 
 interface RenameDialogProps {
   file: ProjectFile;
@@ -29,8 +30,13 @@ export function RenameDialog({
   onOpenChange,
   onRename,
 }: RenameDialogProps) {
+  const { projectStructure } = useProject();
   const [newName, setNewName] = useState(clearFolderName(file.name));
   const [error, setError] = useState<string | null>(null);
+
+  const parent = useMemo(() => {
+    return findParentFile(file, projectStructure);
+  }, [projectStructure, file]);
 
   useEffect(() => {
     if (open) {
@@ -38,6 +44,14 @@ export function RenameDialog({
       setError(null);
     }
   }, [open, file.name]);
+
+  const isNameExists = useCallback(
+    (name: string) => {
+      if (!parent || !parent.children) return false;
+      return parent.children.some((f) => f.name === name && f.id !== file.id);
+    },
+    [parent, file]
+  );
 
   const validateName = (name: string): boolean => {
     if (name.trim() === "") {
@@ -60,6 +74,10 @@ export function RenameDialog({
     }
     if (Object.values(AssignedFileNames).includes(name as AssignedFileName)) {
       setError("This name is reserved and cannot be used");
+      return false;
+    }
+    if (isNameExists(name)) {
+      setError("This name is already used in this directory");
       return false;
     }
     setError(null);

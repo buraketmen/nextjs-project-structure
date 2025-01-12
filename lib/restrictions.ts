@@ -8,8 +8,8 @@ import {
   RouteTypeFolderNames,
 } from "@/types/project";
 import {
-  clearFolderName,
-  findParentFile,
+  getNewFolderName,
+  hasPrivateRouter,
   hasApiRoute,
   hasSelectedRoutersInAllLevels,
   hasSelectedFilesInAllLevels,
@@ -49,46 +49,6 @@ interface FileRestrictions {
   canDelete: (props: InputProps) => OutputProps;
 }
 
-const hasPrivateRoute = (
-  file: ProjectFile,
-  fileStructure: ProjectFile[]
-): boolean => {
-  if (file.routeType === RouteTypes.private) return true;
-  const parent = findParentFile(fileStructure, file);
-  if (!parent) return false;
-  return hasPrivateRoute(parent, fileStructure);
-};
-
-const getNewFolderName = (
-  parent: ProjectFile | null | undefined,
-  fileId: string,
-  routeType: RouteType,
-  baseName: string = "newFolder"
-): string => {
-  const siblings = parent?.children || [];
-  let counter = 0;
-  let newName = RouteTypeFolderNames[routeType](clearFolderName(baseName));
-
-  while (
-    siblings.some((child) => child.id !== fileId && child.name === newName)
-  ) {
-    let suffix = "";
-    let n = counter;
-
-    do {
-      suffix = String.fromCharCode(65 + (n % 26)) + suffix;
-      n = Math.floor(n / 26) - 1;
-    } while (n >= 0);
-
-    newName = RouteTypeFolderNames[routeType](
-      clearFolderName(`${baseName}${suffix}`)
-    );
-    counter++;
-  }
-
-  return newName;
-};
-
 export const restrictions: Record<string, Record<string, FileRestrictions>> = {
   api: {
     route: {
@@ -107,7 +67,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         }
 
         // If has private route parent, dont show (recursive)
-        if (hasPrivateRoute(parent, fileStructure)) {
+        if (hasPrivateRouter(parent, fileStructure)) {
           return false;
         }
 
@@ -148,7 +108,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           return false;
         }
 
-        const isUnderPrivateRoute = hasPrivateRoute(parent, fileStructure);
+        const isUnderPrivateRoute = hasPrivateRouter(parent, fileStructure);
 
         switch (parent.routeType) {
           case RouteTypes.static: {
@@ -206,7 +166,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
       canAdd: (props: InputProps): OutputProps => {
         // Check for name conflicts and update the name if needed
         // No need to check for route type conflicts here, because it's already checked in the showInDropdown function
-        const newName = getNewFolderName(
+        const { name } = getNewFolderName(
           props.parent,
           props.file.id,
           props.file.routeType
@@ -215,7 +175,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         return {
           allowed: true,
           asset: {
-            file: { name: newName },
+            file: { name: name },
           },
         };
       },
@@ -227,36 +187,50 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           };
         }
 
-        let newName = props.updates?.name || props.file.name;
+        const newName = props.updates?.name || props.file.name;
         const routeType = props.updates?.routeType;
 
         if (!routeType) {
-          newName = getNewFolderName(
+          const { name, iteration } = getNewFolderName(
             props.parent,
             props.file.id,
             props.file.routeType,
             RouteTypeFolderNames[props.file.routeType](newName)
           );
+          if (iteration > 0 && name !== newName) {
+            return {
+              allowed: false,
+              message: "Name already exists",
+            };
+          }
+
           return {
             allowed: true,
             asset: {
-              file: { ...props.updates, name: newName },
+              file: { ...props.updates, name: name },
             },
           };
         }
 
-        newName = getNewFolderName(
+        const { name, iteration } = getNewFolderName(
           props.parent,
           props.file.id,
           routeType,
           RouteTypeFolderNames[routeType](newName)
         );
 
+        if (iteration > 0 && name !== newName) {
+          return {
+            allowed: false,
+            message: "Name already exists",
+          };
+        }
+
         switch (routeType) {
           case RouteTypes.static:
             return {
               allowed: true,
-              asset: { file: { ...props.updates, name: newName } },
+              asset: { file: { ...props.updates, name: name } },
             };
           case RouteTypes.dynamic: {
             if (
@@ -275,7 +249,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -297,7 +271,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -332,7 +306,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -452,7 +426,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           return false;
         }
 
-        const isUnderPrivateRoute = hasPrivateRoute(parent, fileStructure);
+        const isUnderPrivateRoute = hasPrivateRouter(parent, fileStructure);
 
         switch (parent.routeType) {
           case RouteTypes.static: {
@@ -558,7 +532,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
       canAdd: (props: InputProps): OutputProps => {
         // Check for name conflicts and update the name if needed
         // No need to check for route type conflicts here, because it's already checked in the showInDropdown function
-        const newName = getNewFolderName(
+        const { name } = getNewFolderName(
           props.parent,
           props.file.id,
           props.file.routeType
@@ -567,7 +541,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
         return {
           allowed: true,
           asset: {
-            file: { name: newName },
+            file: { name },
           },
         };
       },
@@ -580,36 +554,55 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           };
         }
 
-        let newName = props.updates?.name || props.file.name;
+        const newName = props.updates?.name || props.file.name;
         const routeType = props.updates?.routeType;
 
         if (!routeType) {
-          newName = getNewFolderName(
+          const { name, iteration } = getNewFolderName(
             props.parent,
             props.file.id,
             props.file.routeType,
             RouteTypeFolderNames[props.file.routeType](newName)
           );
+
+          if (iteration > 0 && name !== newName) {
+            return {
+              allowed: false,
+              message: "Name already exists",
+            };
+          }
+
           return {
             allowed: true,
+            message:
+              iteration > 0
+                ? "To make changes, we've added a suffix to the name."
+                : undefined,
             asset: {
-              file: { ...props.updates, name: newName },
+              file: { ...props.updates, name: name },
             },
           };
         }
 
-        newName = getNewFolderName(
+        const { name, iteration } = getNewFolderName(
           props.parent,
           props.file.id,
           routeType,
           RouteTypeFolderNames[routeType](newName)
         );
 
+        if (iteration > 0 && name !== newName) {
+          return {
+            allowed: false,
+            message: "Name already exists",
+          };
+        }
+
         switch (routeType) {
           case RouteTypes.static:
             return {
               allowed: true,
-              asset: { file: { ...props.updates, name: newName } },
+              asset: { file: { ...props.updates, name: name } },
             };
           case RouteTypes.dynamic: {
             if (
@@ -628,7 +621,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -646,7 +639,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -691,7 +684,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -731,7 +724,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -771,7 +764,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -805,7 +798,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -814,7 +807,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -823,7 +816,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -832,7 +825,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
             return {
               allowed: true,
               asset: {
-                file: { ...props.updates, name: newName },
+                file: { ...props.updates, name: name },
               },
             };
           }
@@ -859,7 +852,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           return false;
         }
 
-        if (hasPrivateRoute(parent, fileStructure)) {
+        if (hasPrivateRouter(parent, fileStructure)) {
           return false;
         }
 
@@ -910,7 +903,7 @@ export const restrictions: Record<string, Record<string, FileRestrictions>> = {
           return false;
         }
 
-        if (hasPrivateRoute(parent, fileStructure)) {
+        if (hasPrivateRouter(parent, fileStructure)) {
           return false;
         }
 

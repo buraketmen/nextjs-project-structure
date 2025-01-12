@@ -5,6 +5,8 @@ import {
   FileType,
   ProjectFile,
   RouteType,
+  RouteTypeFolderNames,
+  RouteTypes,
 } from "@/types/project";
 
 export function cn(...inputs: ClassValue[]) {
@@ -16,14 +18,44 @@ export const clearFolderName = (name: string): string => {
   return name.replace(/[()\[\]{}@._]/g, "");
 };
 
+export const getNewFolderName = (
+  parent: ProjectFile | null | undefined,
+  fileId: string,
+  routeType: RouteType,
+  baseName: string = "newFolder"
+): { name: string; iteration: number } => {
+  const siblings = parent?.children || [];
+  let counter = 0;
+  let newName = RouteTypeFolderNames[routeType](clearFolderName(baseName));
+
+  while (
+    siblings.some((child) => child.id !== fileId && child.name === newName)
+  ) {
+    let suffix = "";
+    let n = counter;
+
+    do {
+      suffix = String.fromCharCode(65 + (n % 26)) + suffix;
+      n = Math.floor(n / 26) - 1;
+    } while (n >= 0);
+
+    newName = RouteTypeFolderNames[routeType](
+      clearFolderName(`${baseName}${suffix}`)
+    );
+    counter++;
+  }
+
+  return { name: newName, iteration: counter };
+};
+
 export const findParentFile = (
-  files: ProjectFile[],
-  target: ProjectFile
+  target: ProjectFile,
+  files: ProjectFile[]
 ): ProjectFile | null => {
   for (const file of files) {
     if (file.children?.some((child) => child.id === target.id)) return file;
     if (file.children) {
-      const found = findParentFile(file.children, target);
+      const found = findParentFile(target, file.children);
       if (found) return found;
     }
   }
@@ -35,10 +67,10 @@ export const getFullPath = (
   structure: ProjectFile[]
 ): string => {
   const parts: string[] = [file.name];
-  let current = findParentFile(structure, file);
+  let current = findParentFile(file, structure);
   while (current) {
     parts.unshift(current.name);
-    current = findParentFile(structure, current);
+    current = findParentFile(current, structure);
   }
   return `/${parts.join("/")}`;
 };
@@ -96,9 +128,19 @@ export const hasApiRoute = (
 ): boolean => {
   if (!currentFile) return false;
   if (currentFile.name === AssignedFileNames.api) return true;
-  const nParent = findParentFile(fileStructure, currentFile);
+  const nParent = findParentFile(currentFile, fileStructure);
   if (!nParent) return false;
   return hasApiRoute(nParent, fileStructure);
+};
+
+export const hasPrivateRouter = (
+  file: ProjectFile,
+  fileStructure: ProjectFile[]
+): boolean => {
+  if (file.routeType === RouteTypes.private) return true;
+  const parent = findParentFile(file, fileStructure);
+  if (!parent) return false;
+  return hasPrivateRouter(parent, fileStructure);
 };
 
 export const replaceDynamicRoutePatterns = (path: string): string => {

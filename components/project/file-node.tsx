@@ -1,9 +1,9 @@
 "use client";
 
 import { useProject } from "@/context/project-context";
-import { ChevronRight, File, Folder } from "lucide-react";
+import { ChevronRight, File, Folder, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileTypes, ProjectFile, RouteTypes } from "@/types/project";
 import { FileMenu } from "./file-menu";
@@ -18,7 +18,6 @@ interface FileNodeProps {
 export function FileNode({ file, level }: FileNodeProps) {
   const { currentFile, setCurrentFile, updateFile } = useProject();
   const isDirectory = file.type === FileTypes.directory;
-  const Icon = isDirectory ? Folder : File;
   const [isOpen, setIsOpen] = useState(file.isExpanded || false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -40,6 +39,18 @@ export function FileNode({ file, level }: FileNodeProps) {
   const handleRename = (newName: string) => {
     updateFile(file.id, { name: newName });
   };
+
+  const getIcon = useCallback(
+    (file: ProjectFile) => {
+      if (file.type === FileTypes.directory) {
+        return isOpen ? FolderOpen : Folder;
+      }
+      return File;
+    },
+    [isOpen]
+  );
+
+  const Icon = getIcon(file);
 
   return (
     <div

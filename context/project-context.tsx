@@ -146,7 +146,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const getLayoutFile = (file: ProjectFile | null) => {
     if (!file) return null;
-    const parent = findParentFile(projectStructure, file);
+    const parent = findParentFile(file, projectStructure);
     if (!parent?.children) return null;
     return (
       parent.children.find(
@@ -157,7 +157,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const getPageFile = (file: ProjectFile | null) => {
     if (!file) return null;
-    const parent = findParentFile(projectStructure, file);
+    const parent = findParentFile(file, projectStructure);
     if (!parent?.children) return null;
     return (
       parent.children.find(
@@ -172,7 +172,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   ): boolean => {
     if (!file) return false;
     if (checkItself && file.name === AssignedFileNames.api) return true;
-    const parent = findParentFile(projectStructure, file);
+    const parent = findParentFile(file, projectStructure);
     if (!parent) return false;
     if (parent.name === AssignedFileNames.api) return true;
     return hasApiParent(parent, false);
@@ -238,6 +238,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    if (result.message) {
+      toast({
+        title: "Info",
+        description: result.message,
+      });
+    }
+
     if (result.asset?.file) {
       Object.assign(newFile, result.asset.file);
     }
@@ -257,7 +264,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       )
     ) {
       toast({
-        title: "Restriction Error",
+        title: "Error",
         description: "Cannot rename to a reserved name",
       });
       return;
@@ -266,7 +273,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const file = findFileById(initialStructure, fileId);
     if (!file) {
       toast({
-        title: "Restriction Error",
+        title: "Error",
         description: "File not found",
       });
       return;
@@ -275,14 +282,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     if (hasApiParent(file, true)) {
       result = restrictions.api[file.type].canUpdate({
         file,
-        parent: findParentFile(projectStructure, file) || undefined,
+        parent: findParentFile(file, projectStructure) || undefined,
         updates,
         fileStructure: projectStructure,
       });
     } else {
       result = restrictions.app[file.type].canUpdate({
         file,
-        parent: findParentFile(projectStructure, file) || undefined,
+        parent: findParentFile(file, projectStructure) || undefined,
         updates,
         fileStructure: projectStructure,
       });
@@ -290,10 +297,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     if (!result.allowed) {
       toast({
-        title: "Restriction Error",
+        title: "Error",
         description: result.message,
       });
       return;
+    }
+
+    if (result.message) {
+      toast({
+        title: "Info",
+        description: result.message,
+      });
     }
 
     if (result.asset?.file) {
