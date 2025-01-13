@@ -28,13 +28,9 @@ export const appPageRestrictions: FileRestrictions = {
 
     switch (parent?.routeType) {
       case RouteTypes.static:
-        return true;
       case RouteTypes.dynamic:
-        return true;
       case RouteTypes.catchAll:
-        return true;
       case RouteTypes.optionalCatchAll:
-        return true;
       case RouteTypes.parallel:
         return true;
       default:
@@ -49,7 +45,10 @@ export const appPageRestrictions: FileRestrictions = {
   },
 
   canUpdate: (): OutputProps => {
-    return { allowed: false, message: "Page files cannot be renamed" };
+    return {
+      allowed: false,
+      message: "Page handlers (page.tsx) cannot be renamed",
+    };
   },
 
   canDelete: (): OutputProps => {

@@ -193,7 +193,7 @@ export const apiDirectoryRestrictions: FileRestrictions = {
           return {
             allowed: false,
             message:
-              "Route Groups (folders with parentheses) are for organization only and cannot contain route handlers (route.ts)",
+              "Route groups (folders with parentheses) are for organization only and cannot contain route handlers (route.ts)",
           };
         }
 
@@ -219,7 +219,7 @@ export const apiDirectoryRestrictions: FileRestrictions = {
           return {
             allowed: false,
             message:
-              "Private folders (_folder) cannot contain Page or Layout files as they are not part of the public routing system",
+              "Private folders (_folder) cannot contain page handlers (page.tsx) or layout handlers (layout.tsx) as they are not part of the public routing system",
           };
         }
         if (hasSelectedFilesInAllLevels(props.file, [FileTypes.route], true)) {

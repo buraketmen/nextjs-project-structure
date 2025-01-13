@@ -29,11 +29,8 @@ export const appLayoutRestrictions: FileRestrictions = {
 
     switch (parent?.routeType) {
       case RouteTypes.static:
-        return true;
       case RouteTypes.dynamic:
-        return true;
       case RouteTypes.catchAll:
-        return true;
       case RouteTypes.optionalCatchAll:
         return true;
       default:

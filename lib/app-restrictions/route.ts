@@ -7,19 +7,22 @@ export const appRouteRestrictions: FileRestrictions = {
   canAdd: (): OutputProps => {
     return {
       allowed: false,
-      message: "Route files are not allowed outside the API directory",
+      message:
+        "API route handlers (route.ts) are not allowed outside the API directory",
     };
   },
   canUpdate: (): OutputProps => {
     return {
       allowed: false,
-      message: "Route files are not allowed outside the API directory",
+      message:
+        "API route handlers (route.ts) are not allowed outside the API directory",
     };
   },
   canDelete: (): OutputProps => {
     return {
       allowed: false,
-      message: "Route files are not allowed outside the API directory",
+      message:
+        "API route handlers (route.ts) are not allowed outside the API directory",
     };
   },
 };

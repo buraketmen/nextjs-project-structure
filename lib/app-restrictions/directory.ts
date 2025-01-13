@@ -32,7 +32,11 @@ export const appDirectoryRestrictions: FileRestrictions = {
       // If no route type is specified, show it. Because it's a default directory.
       return (
         parent.routeType !== RouteTypes.catchAll &&
-        parent.routeType !== RouteTypes.optionalCatchAll
+        parent.routeType !== RouteTypes.optionalCatchAll &&
+        parent.routeType !== RouteTypes.parallel &&
+        parent.routeType !== RouteTypes.interceptedSameLevel &&
+        parent.routeType !== RouteTypes.interceptedOneLevelAbove &&
+        parent.routeType !== RouteTypes.interceptedTwoLevelsAbove
       );
     }
 
@@ -243,7 +247,7 @@ export const appDirectoryRestrictions: FileRestrictions = {
           return {
             allowed: false,
             message:
-              "Route Groups (folders with parentheses) cannot contain Page files as they are used for organization only",
+              "Route Groups (folders with parentheses) cannot contain page handlers (page.tsx) as they are used for organization only",
           };
         }
 
@@ -265,7 +269,7 @@ export const appDirectoryRestrictions: FileRestrictions = {
           return {
             allowed: false,
             message:
-              "You can not use private folder when folder or any sub-folder has a Page or Layout file.",
+              "You can not use private folder when folder or any sub-folder has page handlers (page.tsx) or layout handlers (layout.tsx).",
           };
         }
 

@@ -9,19 +9,19 @@ export const apiPageRestrictions: FileRestrictions = {
     return {
       allowed: false,
       message:
-        "Page files can only be used in the app directory, not in API routes",
+        "Page handlers (page.tsx) can only be used in the app directory, not in API routes",
     };
   },
   canUpdate: (): OutputProps => {
     return {
       allowed: false,
-      message: "Pages are not allowed in the API directory",
+      message: "Page handlers (page.tsx) are not allowed in the API directory",
     };
   },
   canDelete: (): OutputProps => {
     return {
       allowed: false,
-      message: "Pages are not allowed in the API directory",
+      message: "Page handlers (page.tsx) are not allowed in the API directory",
     };
   },
 };

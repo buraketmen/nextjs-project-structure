@@ -28,7 +28,6 @@ export const apiRouteRestrictions: FileRestrictions = {
 
     switch (parent?.routeType) {
       case RouteTypes.group:
-        return false;
       case RouteTypes.private:
         return false;
       default:
@@ -41,7 +40,10 @@ export const apiRouteRestrictions: FileRestrictions = {
     return { allowed: true };
   },
   canUpdate: (): OutputProps => {
-    return { allowed: false, message: "Route files cannot be renamed" };
+    return {
+      allowed: false,
+      message: "API route handlers (route.ts) cannot be renamed",
+    };
   },
   canDelete: (): OutputProps => {
     return { allowed: true };

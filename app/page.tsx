@@ -33,13 +33,11 @@ function HomeContent() {
         >
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-1 md:mb-2 border-b p-1 md:p-2">
-              <h1 className="text-md md:text-xl font-bold truncate">
-                Next.js Structure
-              </h1>
+              <h1 className="text-xl font-bold truncate">Next.js Structure</h1>
               <ThemeToggle />
             </div>
             <h2 className="hidden md:block text-[14px] md:text-md font-semibold mb-1 md:mb-2 px-1 md:px-2 text-muted-foreground/50">
-              Project Structure
+              Project
             </h2>
             <div className="flex-1 overflow-y-auto px-1 md:px-2">
               <ProjectStructure />

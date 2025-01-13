@@ -9,19 +9,21 @@ export const apiLayoutRestrictions: FileRestrictions = {
     return {
       allowed: false,
       message:
-        "Layout files can only be used in the app directory, not in API routes",
+        "Layout handlers (layout.tsx) can only be used in the app directory, not in API routes",
     };
   },
   canUpdate: (): OutputProps => {
     return {
       allowed: false,
-      message: "Layouts are not allowed in the API directory",
+      message:
+        "Layout handlers (layout.tsx) are not allowed in the API directory",
     };
   },
   canDelete: (): OutputProps => {
     return {
       allowed: false,
-      message: "Layouts are not allowed in the API directory",
+      message:
+        "Layout handlers (layout.tsx) are not allowed in the API directory",
     };
   },
 };
