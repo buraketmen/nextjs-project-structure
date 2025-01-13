@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import {
   AssignedFileNames,
   FileType,
+  FileTypes,
   ProjectFile,
   RouteType,
   RouteTypeFolderNames,
@@ -163,7 +164,8 @@ export const hasSelectedRoutersInDirectory = (
   if (!directory) return false;
   if (!directory.children) return false;
   return directory.children.some((file) => {
-    if (file.id === exceptFileId) return false;
+    if (file.id === exceptFileId || file.type !== FileTypes.directory)
+      return false;
     return routers.includes(file.routeType);
   });
 };
@@ -178,6 +180,7 @@ export const hasSelectedRoutersInAllLevels = (
 
   if (
     checkItself &&
+    directory.type === FileTypes.directory &&
     directory.routeType &&
     routers.includes(directory.routeType)
   ) {
@@ -185,7 +188,11 @@ export const hasSelectedRoutersInAllLevels = (
   }
 
   return directory.children.some((file) => {
-    if (file.routeType && routers.includes(file.routeType)) {
+    if (
+      file.type === FileTypes.directory &&
+      file.routeType &&
+      routers.includes(file.routeType)
+    ) {
       return true;
     }
     if (file.children) {
@@ -203,7 +210,8 @@ export const hasSelectedFilesInDirectory = (
   if (!directory) return false;
   if (!directory.children) return false;
   return directory.children.some((file) => {
-    if (file.id === exceptFileId) return false;
+    if (file.id === exceptFileId || file.type === FileTypes.directory)
+      return false;
     return fileTypes.includes(file.type);
   });
 };
@@ -215,12 +223,21 @@ export const hasSelectedFilesInAllLevels = (
 ): boolean => {
   if (!directory) return false;
   if (!directory.children) return false;
-  if (checkItself && directory.type && fileTypes.includes(directory.type)) {
+  if (
+    checkItself &&
+    directory.type &&
+    directory.type !== FileTypes.directory &&
+    fileTypes.includes(directory.type)
+  ) {
     return true;
   }
 
   return directory.children.some((file) => {
-    if (file.type && fileTypes.includes(file.type)) {
+    if (
+      file.type &&
+      file.type !== FileTypes.directory &&
+      fileTypes.includes(file.type)
+    ) {
       return true;
     }
     if (file.children) {

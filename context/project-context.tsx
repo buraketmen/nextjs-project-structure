@@ -116,7 +116,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [projectStructure, setProjectStructure] =
     useState<ProjectFile[]>(initialStructure);
   const [currentFile, setCurrentFile] = useState<ProjectFile | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "info" | "error";
+    message: string;
+  } | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (toastMessage && toastMessage.message) {
+      toast({
+        title: toastMessage.type === "info" ? "Info" : "Error",
+        description: toastMessage.message,
+        variant: toastMessage.type === "info" ? "default" : "destructive",
+        duration: 10000,
+      });
+      setToastMessage(null);
+    }
+  }, [toastMessage]);
 
   useEffect(() => {
     const file = findFileById(projectStructure, currentFile?.id);
@@ -232,17 +248,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     newFile.endpoint = buildEndpoint(newFile, parentPath);
 
     if (!result.allowed) {
-      toast({
-        title: "Restriction Error",
-        description: result.message,
+      setToastMessage({
+        type: "error",
+        message: result.message || "Not allowed.",
       });
       return null;
     }
 
     if (result.message) {
-      toast({
-        title: "Info",
-        description: result.message,
+      setToastMessage({
+        type: "info",
+        message: result.message,
       });
     }
 
@@ -265,18 +281,18 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         updates.name as AssignedFileName
       )
     ) {
-      toast({
-        title: "Error",
-        description: "Cannot rename to a reserved name",
+      setToastMessage({
+        type: "error",
+        message: "Cannot rename to a reserved name",
       });
       return;
     }
     let initialStructure = [...projectStructure];
     const file = findFileById(initialStructure, fileId);
     if (!file) {
-      toast({
-        title: "Error",
-        description: "File not found",
+      setToastMessage({
+        type: "error",
+        message: "File not found",
       });
       return;
     }
@@ -298,17 +314,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     if (!result.allowed) {
-      toast({
-        title: "Error",
-        description: result.message,
+      setToastMessage({
+        type: "error",
+        message: result.message || "Not allowed.",
       });
       return;
     }
 
     if (result.message) {
-      toast({
-        title: "Info",
-        description: result.message,
+      setToastMessage({
+        type: "info",
+        message: result.message,
       });
     }
 

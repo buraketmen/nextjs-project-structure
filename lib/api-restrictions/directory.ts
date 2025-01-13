@@ -42,9 +42,9 @@ export const apiDirectoryRestrictions: FileRestrictions = {
       case RouteTypes.static: {
         switch (routeType) {
           case RouteTypes.dynamic:
-            return !isUnderPrivateRoute;
           case RouteTypes.group:
             return !isUnderPrivateRoute;
+
           case RouteTypes.private:
             return true;
           default:
@@ -53,24 +53,22 @@ export const apiDirectoryRestrictions: FileRestrictions = {
       }
       case RouteTypes.dynamic: {
         switch (routeType) {
+          case RouteTypes.private:
           case RouteTypes.static:
             return true;
           case RouteTypes.group:
             return !isUnderPrivateRoute;
-          case RouteTypes.private:
-            return true;
           default:
             return false;
         }
       }
       case RouteTypes.group: {
         switch (routeType) {
+          case RouteTypes.private:
           case RouteTypes.static:
             return true;
           case RouteTypes.dynamic:
             return !isUnderPrivateRoute;
-          case RouteTypes.private:
-            return true;
           default:
             return false;
         }
@@ -80,7 +78,6 @@ export const apiDirectoryRestrictions: FileRestrictions = {
           case RouteTypes.static:
             return true;
           case RouteTypes.group:
-            return !isUnderPrivateRoute;
           case RouteTypes.dynamic:
             return !isUnderPrivateRoute;
           default:

@@ -31,12 +31,11 @@ export const appDirectoryRestrictions: FileRestrictions = {
     if (!routeType) {
       // If no route type is specified, show it. Because it's a default directory.
       return (
-        parent.routeType !== RouteTypes.catchAll &&
-        parent.routeType !== RouteTypes.optionalCatchAll &&
-        parent.routeType !== RouteTypes.parallel &&
-        parent.routeType !== RouteTypes.interceptedSameLevel &&
-        parent.routeType !== RouteTypes.interceptedOneLevelAbove &&
-        parent.routeType !== RouteTypes.interceptedTwoLevelsAbove
+        parent.routeType !== RouteTypes.catchAll && // Cant use static directory in catch-all
+        parent.routeType !== RouteTypes.optionalCatchAll && // Cant use static directory in optional catch-all
+        parent.routeType !== RouteTypes.interceptedSameLevel && // Cant use static directory in intercepted same level
+        parent.routeType !== RouteTypes.interceptedOneLevelAbove && // Cant use static directory in intercepted one level above
+        parent.routeType !== RouteTypes.interceptedTwoLevelsAbove // Cant use static directory in intercepted two levels above
       );
     }
 
@@ -376,10 +375,7 @@ export const appDirectoryRestrictions: FileRestrictions = {
         };
       }
       case RouteTypes.parallel: {
-        // Restrictions:
-        // 1. All folders have to be parallel, everything else is not allowed
-        // TODO: Implement
-
+        console.log({ parent: props.parent, file: props.file });
         if (
           hasSelectedRoutersInDirectory(
             props.parent,
@@ -393,7 +389,7 @@ export const appDirectoryRestrictions: FileRestrictions = {
               RouteTypes.interceptedOneLevelAbove,
               RouteTypes.interceptedTwoLevelsAbove,
             ],
-            null
+            props.file.id
           )
         ) {
           return {
