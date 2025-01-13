@@ -10,7 +10,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Next.js Project Structure Explorer",
-  description: "Interactive Next.js project structure explorer",
+  description:
+    "Interactive Next.js project structure explorer. Routes, pages, layouts, and more.",
   icons: {
     icon: "/favicon.ico",
   },

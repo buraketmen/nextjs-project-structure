@@ -27,7 +27,8 @@ import {
   updateStructure,
 } from "../lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { restrictions } from "../lib/restrictions";
+import apiRestrictions from "@/lib/api-restrictions";
+import appRestrictions from "@/lib/app-restrictions";
 
 const fileConfigs: Record<
   FileType,
@@ -129,14 +130,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   ): boolean => {
     if (!parent || !type) return false;
     if (!hasApiParent(parent, true)) {
-      return restrictions.app[type].showInDropdown({
+      return appRestrictions[type].showInDropdown({
         parent: parent,
         fileStructure: projectStructure,
         type,
         routeType: routeType || undefined,
       });
     }
-    return restrictions.api[type].showInDropdown({
+    return apiRestrictions[type].showInDropdown({
       parent: parent,
       fileStructure: projectStructure,
       type,
@@ -215,13 +216,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     let result;
     if (hasApiParent(parent, true)) {
-      result = restrictions.api[type].canAdd({
+      result = apiRestrictions[type].canAdd({
         file: newFile,
         parent,
         fileStructure: projectStructure,
       });
     } else {
-      result = restrictions.app[type].canAdd({
+      result = appRestrictions[type].canAdd({
         file: newFile,
         parent,
         fileStructure: projectStructure,
@@ -250,6 +251,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     if (newFile) {
+      parent.isExpanded = true;
       parent.children = [...(parent.children || []), newFile];
       setProjectStructure(newStructure);
     }
@@ -280,14 +282,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
     let result;
     if (hasApiParent(file, true)) {
-      result = restrictions.api[file.type].canUpdate({
+      result = apiRestrictions[file.type].canUpdate({
         file,
         parent: findParentFile(file, projectStructure) || undefined,
         updates,
         fileStructure: projectStructure,
       });
     } else {
-      result = restrictions.app[file.type].canUpdate({
+      result = appRestrictions[file.type].canUpdate({
         file,
         parent: findParentFile(file, projectStructure) || undefined,
         updates,

@@ -3,7 +3,7 @@
 import { useProject } from "@/context/project-context";
 import { ChevronRight, File, Folder, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileTypes, ProjectFile, RouteTypes } from "@/types/project";
 import { FileMenu } from "./file-menu";
@@ -31,6 +31,10 @@ export function FileNode({ file, level }: FileNodeProps) {
       setCurrentFile(file);
     }
   };
+
+  useEffect(() => {
+    setIsOpen(file.isExpanded || false);
+  }, [file.isExpanded]);
 
   const handleUpdateStyles = (styles: ProjectFile["customStyles"]) => {
     updateFile(file.id, { customStyles: styles });
